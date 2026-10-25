@@ -1,0 +1,9 @@
+{
+  "name": "machine-heart",
+  "version": "0.1.0",
+  "private": true,
+  "description": "机器之心定时更新",
+  "scripts": {
+    "test": "node scripts/check-brief.js"
+  }
+}
