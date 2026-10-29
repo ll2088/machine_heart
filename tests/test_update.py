@@ -49,6 +49,45 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertIn("退出码", roadmap)
         self.assertIn("## 阶段 1 完成标准", roadmap)
 
+    def test_brief_has_date_links_and_entries(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("## 简报落地", readme)
+        brief = readme.split("## 简报落地")[1].split("\n## ")[0]
+        self.assertRegex(brief, r"\d{4}-\d{2}-\d{2}")
+        self.assertIn("https://", brief)
+        rows = [line for line in brief.splitlines() if re.match(r"^\|\s*\d+\s*\|", line)]
+        self.assertGreaterEqual(len(rows), 3)
+
+    def test_check_brief_rejects_missing_section(self) -> None:
+        import tempfile
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / "scripts").mkdir()
+            shutil.copy(ROOT / "scripts" / "check-brief.js", root / "scripts" / "check-brief.js")
+            (root / "README.md").write_text("# 无小节\n", encoding="utf-8")
+            (root / "docs" / "ROADMAP.md").write_text("# 无清单\n", encoding="utf-8")
+            result = subprocess.run(
+                ["node", str(root / "scripts" / "check-brief.js")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+
+    def test_dry_run_no_file_writes(self) -> None:
+        before = {p: p.stat().st_mtime for p in ROOT.rglob("*") if p.is_file()}
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--dry-run"],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("[DRY-RUN]", result.stdout)
+        after = {p: p.stat().st_mtime for p in ROOT.rglob("*") if p.is_file()}
+        self.assertEqual(before, after)
+
 
 if __name__ == "__main__":
     unittest.main()

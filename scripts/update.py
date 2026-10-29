@@ -21,9 +21,14 @@ def build_record() -> str:
     )
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    dry_run = "--dry-run" in args
     record = build_record()
-    print(record)
+    if dry_run:
+        print("[DRY-RUN] " + record)
+    else:
+        print(record)
     return 0
 
 

@@ -30,10 +30,26 @@ const readme = readFile(readmePath);
 const roadmap = readFile(roadmapPath);
 
 // 1. 必备二级小节
-const requiredSections = ['选题简报', '专题跟踪', '来源与日期'];
+const requiredSections = ['选题简报', '简报落地', '专题跟踪', '来源与日期'];
 for (const s of requiredSections) {
   if (!readme.includes('## ' + s)) {
     fail('README.md 缺少二级小节: ## ' + s);
+  }
+}
+
+// 1.1 简报落地小节必须含日期、来源链接与不少于 3 条条目
+const briefSection = readme.split('## 简报落地')[1];
+if (briefSection) {
+  const briefBody = briefSection.split(/^## /m)[0];
+  if (!/\d{4}-\d{2}-\d{2}/.test(briefBody)) {
+    fail('简报落地小节缺少日期（YYYY-MM-DD）');
+  }
+  if (!/https?:\/\//.test(briefBody)) {
+    fail('简报落地小节缺少来源链接 URL');
+  }
+  const briefRows = briefBody.split('\n').filter((line) => /^\|\s*\d+\s*\|/.test(line));
+  if (briefRows.length < 3) {
+    fail('简报落地小节条目不足 3 条，当前为 ' + briefRows.length + ' 条');
   }
 }
 
