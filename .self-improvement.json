@@ -1,26 +1,55 @@
 {
   "version": 2,
   "generatedBy": "autojump",
-  "setup": "",
-  "dimensions": [],
+  "setup": "npm install",
+  "dimensions": [
+    {
+      "key": "effect",
+      "label": "效果",
+      "command": "npm test",
+      "timeout_minutes": 20
+    },
+    {
+      "key": "performance",
+      "label": "性能",
+      "command": "python3 scripts/update.py",
+      "timeout_minutes": 20,
+      "runs": 3,
+      "budget_ms": null
+    },
+    {
+      "key": "stability",
+      "label": "稳定性",
+      "command": "npm test",
+      "timeout_minutes": 20,
+      "runs": 3,
+      "max_failure_rate": 0
+    },
+    {
+      "key": "usability",
+      "label": "可用性",
+      "command": "python3 scripts/update.py",
+      "timeout_minutes": 20
+    }
+  ],
   "effect": {
-    "command": "",
+    "command": "npm test",
     "timeout_minutes": 20
   },
   "performance": {
-    "command": "",
+    "command": "python3 scripts/update.py",
     "timeout_minutes": 20,
     "runs": 3,
     "budget_ms": null
   },
   "stability": {
-    "command": "",
+    "command": "npm test",
     "timeout_minutes": 20,
     "runs": 3,
     "max_failure_rate": 0
   },
   "usability": {
-    "command": "",
+    "command": "python3 scripts/update.py",
     "timeout_minutes": 20
   }
 }
