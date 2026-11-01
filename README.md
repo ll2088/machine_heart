@@ -12,10 +12,32 @@ python3 scripts/update.py
 脚本正常退出时退出码为 0，并在 stdout 输出至少一条以 `[UPDATE]` 开头的更新记录，例如：
 
 ```
-[UPDATE] ts=2026-10-25T00:00:00Z source=machine_heart status=ok
+[UPDATE] ts=2026-10-25T00:00:00Z source=machine_heart interval=3600 status=ok
 ```
 
 脚本不访问网络、不写文件，重复执行输出一致，可安全用于定时任务重跑。
+
+### 配置文件 config.json
+
+脚本的唯一参数来源是仓库根目录的 `config.json`，仅用 Python 标准库读取：
+
+| 字段 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `interval` | 正整数 | `3600` | 更新间隔（秒），会体现在输出记录中 |
+| `source` | 非空字符串 | `machine_heart` | 数据源名称，会体现在输出记录中 |
+
+示例：
+
+```json
+{
+  "interval": 3600,
+  "source": "machine_heart"
+}
+```
+
+- `config.json` 缺失时使用上表默认值。
+- `config.json` 不是合法 JSON、顶层不是对象、`interval` 非正整数或 `source` 非空字符串时，脚本向 stderr 输出 `[ERROR]` 开头的可读错误并以非零退出码结束，不写任何文件。
+- 修改 `interval` 或 `source` 后重新运行 `python3 scripts/update.py`，输出记录随之变化。
 
 ## 选题简报
 
