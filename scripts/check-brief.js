@@ -10,6 +10,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
+const briefPath = path.join(root, 'docs', 'BRIEF-2026-10-25.md');
 
 const errors = [];
 
@@ -28,6 +29,7 @@ function readFile(p) {
 
 const readme = readFile(readmePath);
 const roadmap = readFile(roadmapPath);
+const brief = readFile(briefPath);
 
 // 1. 必备二级小节
 const requiredSections = ['选题简报', '专题跟踪', '来源与日期'];
@@ -104,10 +106,49 @@ for (const t of roadmapTopics) {
   }
 }
 
+// 4. 情报简报文档结构：必备主题小节、来源与日期字段、拒绝空小节与占位符
+const briefSections = ['具身智能', '世界模型', 'Agent 记忆', '来源与日期'];
+for (const s of briefSections) {
+  if (!brief.includes('## ' + s)) {
+    fail('docs/BRIEF-2026-10-25.md 缺少二级小节: ## ' + s);
+  }
+}
+
+const briefBlocks = brief.split(/^### 条目 /m).slice(1);
+if (briefBlocks.length < 5) {
+  fail('情报简报条目不足 5 条，当前为 ' + briefBlocks.length + ' 条');
+}
+
+const briefFieldLabels = ['标题', '来源链接', '一句话摘要', '推荐理由', '来源与日期'];
+briefBlocks.forEach((block, i) => {
+  const name = '条目 ' + (i + 1);
+  for (const label of briefFieldLabels) {
+    const re = new RegExp('^- ' + label + '：\\S', 'm');
+    if (!re.test(block)) {
+      fail(name + ' 缺少字段: ' + label);
+    }
+  }
+  if (!/https?:\/\//.test(block)) {
+    fail(name + ' 缺少来源链接 URL');
+  }
+  if (/TODO|TBD|待补充|占位/.test(block)) {
+    fail(name + ' 含占位符内容');
+  }
+});
+
+const briefSectionBodies = brief.split(/^## /m).slice(1);
+for (const body of briefSectionBodies) {
+  const title = body.split('\n')[0].trim();
+  const content = body.split('\n').slice(1).join('\n').trim();
+  if (content.length === 0) {
+    fail('docs/BRIEF-2026-10-25.md 存在空小节: ## ' + title);
+  }
+}
+
 if (errors.length > 0) {
   console.error('简报校验失败:');
   for (const e of errors) console.error('  - ' + e);
   process.exit(1);
 }
 
-console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题');
+console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题, ' + briefBlocks.length + ' 条情报');
