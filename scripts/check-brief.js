@@ -10,7 +10,10 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
-const briefPath = path.join(root, 'docs', 'BRIEF-2026-10-25.md');
+// 允许通过环境变量注入简报路径，便于负向用例在不改动仓库文件的前提下验证校验逻辑。
+const briefPath = process.env.BRIEF_PATH
+  ? path.resolve(process.env.BRIEF_PATH)
+  : path.join(root, 'docs', 'BRIEF-2026-10-25.md');
 
 const errors = [];
 
@@ -110,7 +113,7 @@ for (const t of roadmapTopics) {
 const briefSections = ['具身智能', '世界模型', 'Agent 记忆', '来源与日期'];
 for (const s of briefSections) {
   if (!brief.includes('## ' + s)) {
-    fail('docs/BRIEF-2026-10-25.md 缺少二级小节: ## ' + s);
+    fail('简报缺少二级小节: ## ' + s + '（文件: ' + briefPath + '）');
   }
 }
 
@@ -132,7 +135,7 @@ briefBlocks.forEach((block, i) => {
     fail(name + ' 缺少来源链接 URL');
   }
   if (/TODO|TBD|待补充|占位/.test(block)) {
-    fail(name + ' 含占位符内容');
+    fail(name + ' 含占位符内容（文件: ' + briefPath + '）');
   }
 });
 
@@ -141,7 +144,7 @@ for (const body of briefSectionBodies) {
   const title = body.split('\n')[0].trim();
   const content = body.split('\n').slice(1).join('\n').trim();
   if (content.length === 0) {
-    fail('docs/BRIEF-2026-10-25.md 存在空小节: ## ' + title);
+    fail('简报存在空小节: ## ' + title + '（文件: ' + briefPath + '）');
   }
 }
 
