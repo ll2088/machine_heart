@@ -97,6 +97,52 @@ class UpdateScriptTest(unittest.TestCase):
     def test_validate_empty_fails(self) -> None:
         self.assertTrue(archive.validate_articles([]))
 
+    def test_archive_records_include_titles_and_date(self) -> None:
+        records = archive.build_archive_records()
+        self.assertEqual(len(records), 3)
+        joined = "\n".join(records)
+        self.assertIn("Personal Agent", joined)
+        self.assertIn("百度开源全新预训练基模", joined)
+        self.assertIn("多模态", joined)
+        for record in records:
+            self.assertIn("date=" + archive.ARCHIVE_DATE, record)
+
+    def test_validate_missing_field_returns_nonzero(self) -> None:
+        broken = [dict(archive.ARTICLES[0])]
+        broken[0].pop("category")
+        errors = archive.validate_articles(broken)
+        self.assertTrue(any("category" in e for e in errors))
+        result = subprocess.run(
+            [sys.executable, str(ARCHIVE_SCRIPT), "--validate"],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_validate_bad_url_returns_nonzero(self) -> None:
+        broken = [dict(archive.ARTICLES[0])]
+        broken[0]["url"] = "ftp://example.com/a"
+        errors = archive.validate_articles(broken)
+        self.assertTrue(any("链接格式错误" in e for e in errors))
+
+    def test_archive_records_no_duplicates(self) -> None:
+        records = archive.build_archive_records()
+        self.assertEqual(len(records), len(set(records)))
+        self.assertEqual(records, archive.build_archive_records())
+
+    def test_check_brief_script_passes(self) -> None:
+        script = ROOT / "scripts" / "check-brief.js"
+        if not script.exists():
+            self.skipTest("check-brief.js 不存在")
+        result = subprocess.run(
+            ["node", str(script)],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
