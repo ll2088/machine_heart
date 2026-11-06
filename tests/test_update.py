@@ -143,6 +143,55 @@ class UpdateScriptTest(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_docs_structure_keywords(self) -> None:
+        """文档结构检查：README 含三篇关键词，ROADMAP 含 2025 日期口径。"""
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        roadmap = (ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        self.assertIn("Personal Agent", readme)
+        self.assertIn("百度Flash", readme)
+        self.assertIn("多模态", readme)
+        self.assertIn("2025", roadmap)
+
+    def test_update_twice_no_duplicate_archive(self) -> None:
+        """连续运行两次，归档条目数不变且无重复。"""
+        first = run_script()
+        second = run_script()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        first_records = [l for l in first.stdout.splitlines() if ARCHIVE_PATTERN.match(l)]
+        second_records = [l for l in second.stdout.splitlines() if ARCHIVE_PATTERN.match(l)]
+        self.assertEqual(len(first_records), len(second_records))
+        self.assertEqual(len(second_records), len(set(second_records)))
+
+    def test_check_brief_missing_field_returns_nonzero(self) -> None:
+        """check-brief.js 对缺失必填字段的简报返回非零退出码。"""
+        script = ROOT / "scripts" / "check-brief.js"
+        if not script.exists():
+            self.skipTest("check-brief.js 不存在")
+        import tempfile
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_root = Path(tmp)
+            (tmp_root / "scripts").mkdir()
+            (tmp_root / "docs").mkdir()
+            shutil.copy(str(script), str(tmp_root / "scripts" / "check-brief.js"))
+            broken_readme = (
+                "# t\n\n## 选题简报\n\n### 选题 1：x\n\n"
+                "- 标题：x\n- 来源链接：https://example.com/a\n"
+                "- 一句话摘要：x\n"
+            )
+            (tmp_root / "README.md").write_text(broken_readme, encoding="utf-8")
+            (tmp_root / "docs" / "ROADMAP.md").write_text(
+                "## 专题跟踪清单\n\n| 专题名称 |\n| --- |\n", encoding="utf-8"
+            )
+            result = subprocess.run(
+                ["node", str(tmp_root / "scripts" / "check-brief.js")],
+                capture_output=True,
+                text=True,
+                cwd=str(tmp_root),
+            )
+            self.assertNotEqual(result.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
