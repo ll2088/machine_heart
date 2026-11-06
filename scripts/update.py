@@ -10,6 +10,8 @@ from __future__ import annotations
 import sys
 from datetime import datetime, timezone
 
+from archive import build_archive_records
+
 # 固定时间戳，保证重复执行输出完全一致（幂等）。
 FIXED_TIMESTAMP = "2026-10-25T00:00:00Z"
 
@@ -21,9 +23,15 @@ def build_record() -> str:
     )
 
 
+def build_output() -> str:
+    """更新记录 + 本轮三篇文章归档记录，顺序固定。"""
+    lines = [build_record()]
+    lines.extend(build_archive_records())
+    return "\n".join(lines)
+
+
 def main() -> int:
-    record = build_record()
-    print(record)
+    print(build_output())
     return 0
 
 
