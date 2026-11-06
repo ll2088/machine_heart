@@ -116,6 +116,34 @@ python3 scripts/update.py
 - 产出形式：性能优化类要点摘录。
 - 优先级：中。
 
+## 本轮归档（2026-10-25）
+
+本节归档本轮机器之心新增的三篇文章，按智能体、基础模型、多模态分类。归档记录由 `scripts/archive.py` 生成，`python3 scripts/update.py` 会在 `[UPDATE]` 记录后输出三条 `[ARCHIVE]` 记录；`python3 scripts/archive.py --validate` 校验必填字段，缺失或链接格式错误时返回非零退出码。
+
+### 归档 1：Personal Agent 技术架构（智能体）
+
+- 标题：对谈千问蒋冠军：从模型、记忆到生态，Personal Agent的技术架构如何搭建？
+- 来源链接：https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=1&sn=1de487a458c1d282c00b4a696aae70ee
+- 分类：智能体
+- 日期：2026-10-25
+- 摘要：系统讨论 Personal Agent 从模型、记忆到生态的搭建思路。
+
+### 归档 2：百度开源文心 5.5 Flash Base（基础模型）
+
+- 标题：刚刚，百度开源全新预训练基模，还是主打效率的Flash
+- 来源链接：https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=2&sn=4dafbecc77de04a45e65aa78c40e6b16
+- 分类：基础模型
+- 日期：2026-10-25
+- 摘要：百度开源全新预训练基模文心 5.5 Flash Base，主打效率。
+
+### 归档 3：连续统一多模态模型（多模态）
+
+- 标题：不做Token化，也不搞双系统！多模态模型有了第三条路
+- 来源链接：https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=3&sn=215382bbb92aebdbef3c201ac3e33851
+- 分类：多模态
+- 日期：2026-10-25
+- 摘要：提出不依赖 Token 化与双系统的连续统一多模态模型新路径。
+
 ## 来源与日期
 
 - 内容来源：机器之心微信公众号本轮更新，共 10 篇文章，链接见各选题条目。

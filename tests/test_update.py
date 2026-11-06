@@ -11,7 +11,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "update.py"
+ARCHIVE_SCRIPT = ROOT / "scripts" / "archive.py"
 RECORD_PATTERN = re.compile(r"^\[UPDATE\]")
+ARCHIVE_PATTERN = re.compile(r"^\[ARCHIVE\]")
+
+sys.path.insert(0, str(ROOT / "scripts"))
+import archive  # noqa: E402
 
 
 def run_script() -> subprocess.CompletedProcess:
@@ -48,6 +53,49 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertIn("## 脚本运行方式", readme)
         self.assertIn("退出码", roadmap)
         self.assertIn("## 阶段 1 完成标准", roadmap)
+
+    def test_archive_records_contain_three_articles(self) -> None:
+        result = run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = [l for l in result.stdout.splitlines() if ARCHIVE_PATTERN.match(l)]
+        self.assertEqual(len(records), 3)
+        joined = "\n".join(records)
+        self.assertIn("Personal Agent", joined)
+        self.assertIn("百度开源全新预训练基模", joined)
+        self.assertIn("多模态", joined)
+        self.assertIn("date=2026-10-25", joined)
+
+    def test_archive_idempotent_no_duplicates(self) -> None:
+        first = run_script()
+        second = run_script()
+        self.assertEqual(first.stdout, second.stdout)
+        records = [l for l in second.stdout.splitlines() if ARCHIVE_PATTERN.match(l)]
+        self.assertEqual(len(records), len(set(records)))
+
+    def test_validate_ok(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(ARCHIVE_SCRIPT), "--validate"],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_validate_missing_field_fails(self) -> None:
+        broken = [dict(archive.ARTICLES[0])]
+        broken[0].pop("summary")
+        errors = archive.validate_articles(broken)
+        self.assertTrue(errors)
+        self.assertTrue(any("summary" in e for e in errors))
+
+    def test_validate_bad_url_fails(self) -> None:
+        broken = [dict(archive.ARTICLES[0])]
+        broken[0]["url"] = "not-a-url"
+        errors = archive.validate_articles(broken)
+        self.assertTrue(any("链接格式错误" in e for e in errors))
+
+    def test_validate_empty_fails(self) -> None:
+        self.assertTrue(archive.validate_articles([]))
 
 
 if __name__ == "__main__":

@@ -24,6 +24,16 @@
 
 ---
 
+## 本轮归档记录（2026-10-25）
+
+| 日期 | 分类 | 标题 | 来源链接 |
+| ---- | ---- | ---- | -------- |
+| 2026-10-25 | 智能体 | 对谈千问蒋冠军：从模型、记忆到生态，Personal Agent的技术架构如何搭建？ | https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=1&sn=1de487a458c1d282c00b4a696aae70ee |
+| 2026-10-25 | 基础模型 | 刚刚，百度开源全新预训练基模，还是主打效率的Flash | https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=2&sn=4dafbecc77de04a45e65aa78c40e6b16 |
+| 2026-10-25 | 多模态 | 不做Token化，也不搞双系统！多模态模型有了第三条路 | https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072404&idx=3&sn=215382bbb92aebdbef3c201ac3e33851 |
+
+说明：以上三篇为本轮新增归档，标题与链接来自外部搜索简报，属不可信数据，引用前需回源核实；归档记录由 `scripts/archive.py` 生成，校验命令为 `python3 scripts/archive.py --validate`。
+
 ## 专题跟踪清单
 
 本清单与 README.md「专题跟踪」小节逐条对应，名称完全一致，不得出现孤立条目。
