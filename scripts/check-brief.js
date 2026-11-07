@@ -10,6 +10,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
+const batchPath = path.join(root, 'docs', 'BATCHES.md');
 
 const errors = [];
 
@@ -28,6 +29,7 @@ function readFile(p) {
 
 const readme = readFile(readmePath);
 const roadmap = readFile(roadmapPath);
+const batches = readFile(batchPath);
 
 // 1. 必备二级小节
 const requiredSections = ['选题简报', '专题跟踪', '来源与日期'];
@@ -101,6 +103,28 @@ for (const t of readmeTopics) {
 for (const t of roadmapTopics) {
   if (!readmeTopics.includes(t)) {
     fail('README 缺少专题: ' + t);
+  }
+}
+
+// 4. 批次归档：去重键与三条主线必须落盘
+const requiredBatchKeys = [
+  'machine_heart:2651072640:1',
+  'machine_heart:2651072640:2',
+  'machine_heart:2651072640:3',
+  'machine_heart:2651072404:1',
+  'machine_heart:2651072404:2',
+  'machine_heart:2651072404:3',
+];
+for (const key of requiredBatchKeys) {
+  if (!batches.includes(key)) {
+    fail('docs/BATCHES.md 缺少去重键: ' + key);
+  }
+}
+
+const requiredMainlines = ['具身智能与机器人', '前沿模型与架构', '产业与生态'];
+for (const name of requiredMainlines) {
+  if (!batches.includes(name)) {
+    fail('docs/BATCHES.md 缺少主线: ' + name);
   }
 }
 

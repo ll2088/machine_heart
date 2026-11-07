@@ -4,6 +4,7 @@
   "private": true,
   "description": "机器之心定时更新",
   "scripts": {
-    "test": "node scripts/check-brief.js"
+    "test": "node scripts/check-brief.js",
+    "test:python": "python3 -m unittest discover -s tests -p 'test_*.py'"
   }
 }
