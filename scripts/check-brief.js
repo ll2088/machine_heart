@@ -14,6 +14,18 @@ const batchPath = path.join(root, 'docs', 'BATCHES.md');
 
 const errors = [];
 
+// 明确拒绝的隐藏/敏感目录清单；任何以点开头的路径段也一并拒绝。
+const HIDDEN_OR_SENSITIVE_SEGMENTS = new Set([
+  '.git',
+  '.github',
+  '.hg',
+  '.svn',
+  '.idea',
+  '.vscode',
+  'node_modules',
+  '__pycache__',
+]);
+
 function fail(msg) {
   errors.push(msg);
 }
@@ -37,8 +49,13 @@ function getValidatedRoot() {
     return actualRoot;
   }
 
+  if (envRoot.includes('\\')) {
+    fail('MACHINE_HEART_ROOT 只能使用 / 作为路径分隔符，不能包含反斜杠: ' + envRoot);
+    return actualRoot;
+  }
+
   const segments = normalized.split(path.sep);
-  if (segments.some((segment) => segment.startsWith('.'))) {
+  if (segments.some((segment) => segment.startsWith('.') || HIDDEN_OR_SENSITIVE_SEGMENTS.has(segment))) {
     fail('MACHINE_HEART_ROOT 不能指向隐藏目录或敏感路径: ' + envRoot);
     return actualRoot;
   }
@@ -55,6 +72,18 @@ function getValidatedRoot() {
   const relative = path.relative(actualRoot, realCandidate);
   if (relative !== '' && (relative.startsWith('..') || path.isAbsolute(relative))) {
     fail('MACHINE_HEART_ROOT 越界或符号链接逃逸: ' + envRoot + ' -> ' + realCandidate);
+    return actualRoot;
+  }
+
+  let realStat;
+  try {
+    realStat = fs.statSync(realCandidate);
+  } catch (e) {
+    fail('MACHINE_HEART_ROOT 解析后无法读取目录状态: ' + envRoot + ' -> ' + realCandidate + ' (' + e.message + ')');
+    return actualRoot;
+  }
+  if (!realStat.isDirectory()) {
+    fail('MACHINE_HEART_ROOT 必须指向目录而非文件: ' + envRoot + ' -> ' + realCandidate);
     return actualRoot;
   }
 

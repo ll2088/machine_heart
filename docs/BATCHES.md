@@ -101,3 +101,12 @@
 - 本轮新增两个批次同样仅确认 idx 1-3；ICLR 2027、NeurIPS 2026 的会议命名与时间需核对。
 - GPT-6.1 参与活体大脑手术涉及医疗安全，必须独立核验原始来源，不得直接采信媒体表述。
 - VLA 3.4 倍提速、跨机器人经验复用、Tool-Calling Agent 数据合成的方法与实验条件均未回源，不能写入结论。
+
+## 8. 安全边界与 CI 维度映射
+
+- 效果：`node scripts/check-brief.js` 验证 README 选题/专题结构、`docs/ROADMAP.md` 专题一致性与 `docs/BATCHES.md` 12 个去重键；`python3 scripts/batch_index.py` 输出 12 行去重键；Python unittest 覆盖去重键唯一、非法参数与 `scripts/update.py` 幂等退出码。
+- 性能：本仓库脚本仅读取本仓库目录且零第三方依赖，验收上以重复执行时间和退出码稳定为准；当前未引入网络或大文件扫描，预期单次校验时间小于 200ms。
+- 稳定性：`check-brief.js` 与 `batch_index.py` 对相同输入输出一致，新增边界测试确保错误路径不会改变既存合法路径结果。
+- 可用性：非法 `MACHINE_HEART_ROOT` 必须返回非 0 退出码，并在 stderr 给出可定位错误；合法调用返回 0。
+- 隐藏/敏感目录清单：`.git`、`.github`、`.hg`、`.svn`、`.idea`、`.vscode`、`node_modules`、`__pycache__`；此外任何以点开头的路径段均拒绝。`..` 逃逸、绝对路径、反斜杠分隔符、路径不存在、realpath 越界与符号链接目录/文件逃逸均由 `scripts/check-brief.js` 的 `getValidatedRoot()` 拒绝。
+- 验证证据提交要求：PR 中需附 `npm test`、`npm run test:python` 的完整日志，以及上述安全边界测试的通过数量；性能数据需记录改动前后各至少 3 次运行耗时。
