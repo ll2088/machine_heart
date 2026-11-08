@@ -114,6 +114,12 @@ const requiredBatchKeys = [
   'machine_heart:2651072404:1',
   'machine_heart:2651072404:2',
   'machine_heart:2651072404:3',
+  'machine_heart:2651072888:1',
+  'machine_heart:2651072888:2',
+  'machine_heart:2651072888:3',
+  'machine_heart:2651072774:1',
+  'machine_heart:2651072774:2',
+  'machine_heart:2651072774:3',
 ];
 for (const key of requiredBatchKeys) {
   if (!batches.includes(key)) {
@@ -125,6 +131,13 @@ const requiredMainlines = ['具身智能与机器人', '前沿模型与架构', 
 for (const name of requiredMainlines) {
   if (!batches.includes(name)) {
     fail('docs/BATCHES.md 缺少主线: ' + name);
+  }
+}
+
+const requiredAttributes = ['技术', '观点'];
+for (const name of requiredAttributes) {
+  if (!batches.includes(name)) {
+    fail('docs/BATCHES.md 缺少属性: ' + name);
   }
 }
 
