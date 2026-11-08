@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import os
 import shutil
 import subprocess
@@ -73,6 +74,7 @@ class CheckBriefSecurityTest(unittest.TestCase):
         shutil.copy2(ROOT / 'README.md', dest / 'README.md')
         shutil.copy2(ROOT / 'docs' / 'ROADMAP.md', dest / 'docs' / 'ROADMAP.md')
         shutil.copy2(ROOT / 'docs' / 'BATCHES.md', dest / 'docs' / 'BATCHES.md')
+        shutil.copy2(ROOT / 'docs' / 'VERIFICATION.md', dest / 'docs' / 'VERIFICATION.md')
         shutil.copy2(ROOT / 'scripts' / 'batch_index.py', dest / 'scripts' / 'batch_index.py')
         shutil.copy2(ROOT / 'package.json', dest / 'package.json')
 
@@ -129,8 +131,56 @@ class CheckBriefSecurityTest(unittest.TestCase):
         self.assertEqual(len(outputs), 1)
 
     def test_no_known_temp_prefix_residue(self) -> None:
-        prefixes = ('tmp-check-brief-link-', 'tmp-check-brief-win-', 'tmp-check-brief-security-')
+        prefixes = ('tmp-check-brief-link-', 'tmp-check-brief-win-', 'tmp-check-brief-security-', 'tmp-check-brief-parallel-')
         residue = [p.name for p in ROOT.iterdir() if any(p.name.startswith(x) for x in prefixes)]
+        self.assertEqual(residue, [])
+
+
+    def test_injection_shell_metacharacters_rejected(self) -> None:
+        marker = Path(tempfile.gettempdir()) / 'machine-heart-pwned'
+        try:
+            marker.unlink()
+        except FileNotFoundError:
+            pass
+        result = run_node('sub;touch ' + str(marker))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('MACHINE_HEART_ROOT 无法解析', result.stderr)
+        self.assertFalse(marker.exists())
+
+    def test_permission_boundary_sensitive_segments_rejected(self) -> None:
+        for name in ('.github', '.svn', '.idea', '.vscode', '__pycache__', 'node_modules'):
+            result = run_node(name)
+            self.assertNotEqual(result.returncode, 0, name)
+            self.assertIn('不能指向隐藏目录或敏感路径', result.stderr)
+
+    def test_symlink_to_sensitive_dir_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-link-') as tmp:
+            root = Path(tmp)
+            target = root / '.git'
+            target.mkdir()
+            link = root / 'escape'
+            link.symlink_to(target)
+            result = run_node(os.path.relpath(link, ROOT).replace(os.sep, '/'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('不能指向隐藏目录或敏感路径', result.stderr)
+
+    def _run_fixture_cleanup_once(self, index: int) -> tuple[int, str]:
+        root = Path(tempfile.mkdtemp(dir=ROOT, prefix='tmp-check-brief-parallel-'))
+        try:
+            self._copy_repo_fixture(root)
+            rel = os.path.relpath(root, ROOT).replace(os.sep, '/')
+            result = run_node(rel)
+            return result.returncode, str(root)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_parallel_fixture_cleanup_has_no_residue(self) -> None:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(self._run_fixture_cleanup_once, range(4)))
+        for code, path_str in results:
+            self.assertEqual(code, 0, path_str)
+            self.assertFalse(Path(path_str).exists(), path_str)
+        residue = [p.name for p in ROOT.iterdir() if p.name.startswith('tmp-check-brief-parallel-')]
         self.assertEqual(residue, [])
 
 

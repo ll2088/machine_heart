@@ -184,5 +184,34 @@ class BatchIndexTest(unittest.TestCase):
             self.assertIn(key, batches)
 
 
+    def test_validate_articles_rejects_non_string_fields(self) -> None:
+        bad_entries = (
+            batch_index.Article('1', 1, 123, '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),
+            batch_index.Article('1', 1, '标题', 123, 'https://mp.weixin.qq.com/x', '观点'),
+            batch_index.Article('1', 1, '标题', '产业与生态', 123, '观点'),
+            batch_index.Article('1', 1, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', 123),
+        )
+        for article in bad_entries:
+            with self.assertRaises(ValueError):
+                batch_index.validate_articles((article,))
+
+    def test_validate_articles_rejects_empty_mid(self) -> None:
+        articles = (batch_index.Article('', 1, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_main_catches_validate_articles_value_error(self) -> None:
+        original = batch_index.ARTICLES
+        stderr = io.StringIO()
+        try:
+            batch_index.ARTICLES = ('not-an-article',)
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = batch_index.main()
+            self.assertEqual(code, 2)
+            self.assertIn('[INVALID]', stderr.getvalue())
+        finally:
+            batch_index.ARTICLES = original
+
+
 if __name__ == '__main__':
     unittest.main()

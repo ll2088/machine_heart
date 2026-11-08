@@ -12,6 +12,7 @@ const root = getValidatedRoot();
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
 const batchPath = path.join(root, 'docs', 'BATCHES.md');
+const verificationPath = path.join(root, 'docs', 'VERIFICATION.md');
 
 const errors = [];
 
@@ -76,6 +77,12 @@ function getValidatedRoot() {
     return actualRoot;
   }
 
+  const realSegments = relative === '' ? [] : relative.split(path.sep);
+  if (realSegments.some((segment) => segment.startsWith('.') || HIDDEN_OR_SENSITIVE_SEGMENTS.has(segment))) {
+    fail('MACHINE_HEART_ROOT 不能指向隐藏目录或敏感路径: ' + envRoot + ' -> ' + realCandidate);
+    return actualRoot;
+  }
+
   let realStat;
   try {
     realStat = fs.statSync(realCandidate);
@@ -103,6 +110,7 @@ function readFile(p) {
 const readme = readFile(readmePath);
 const roadmap = readFile(roadmapPath);
 const batches = readFile(batchPath);
+const verification = readFile(verificationPath);
 
 // 1. 必备二级小节
 const requiredSections = ['选题简报', '专题跟踪', '来源与日期'];
@@ -249,6 +257,20 @@ try {
   fail('package.json 解析失败: ' + e.message);
 }
 
+// 7. 文档一致性：VERIFICATION.md 必须包含可执行验收命令与性能不作结论声明。
+const requiredVerificationSnippets = [
+  'npm test',
+  'npm run test:python',
+  'MACHINE_HEART_ROOT',
+  '不做性能结论',
+  'CI 维度映射',
+];
+for (const snippet of requiredVerificationSnippets) {
+  if (!verification.includes(snippet)) {
+    fail('docs/VERIFICATION.md 缺少关键验收内容: ' + snippet);
+  }
+}
+
 const requiredMainlines = ['具身智能与机器人', '前沿模型与架构', '产业与生态'];
 for (const name of requiredMainlines) {
   if (!batches.includes(name)) {
@@ -269,4 +291,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题');
+console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题, 文档一致性通过');

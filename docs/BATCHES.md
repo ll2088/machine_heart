@@ -89,7 +89,7 @@
 
 ## 6. 验收与测试
 
-- `node scripts/check-brief.js`：校验 README 选题/专题结构、ROADMAP 专题一致性，以及本文档 12 个去重键、三条主线与技术/观点属性。
+- `node scripts/check-brief.js`：校验 README 选题/专题结构、ROADMAP 专题一致性、本文档 12 个去重键/三条主线/技术观点属性，以及 `docs/VERIFICATION.md` 的关键验收契约。
 - `python3 scripts/batch_index.py`：预期输出 12 行去重键。
 - `python3 -m unittest discover -s tests -p 'test_*.py'`：校验去重键唯一、格式正确、非法参数被拒绝。
 
@@ -106,7 +106,7 @@
 
 - 验收标准：逐条命令与通过条件见 `docs/VERIFICATION.md`；本节只列映射摘要。
 - 效果：`node scripts/check-brief.js` 验证 README 选题/专题结构、`docs/ROADMAP.md` 专题一致性与 `docs/BATCHES.md` 12 个去重键；`python3 scripts/batch_index.py` 输出 12 行去重键；Python unittest 覆盖去重键唯一、非法参数与 `scripts/update.py` 幂等退出码。
-- 性能：不做收益结论。上一轮 CI 仅记录 medianMs=118、runs=3、samples=[113,118,161]，无改动前后基线，不能支撑性能提升；如需结论，按 `docs/VERIFICATION.md` 补前后各 3 次耗时，否则标注“不做性能结论”。
+- 性能：不做收益结论。历史 CI 只有耗时记录，无改动前后基线，本文不引用具体耗时；如需结论，按 `docs/VERIFICATION.md` 补前后各 3 次耗时，否则标注“不做性能结论”。
 - 稳定性：`check-brief.js` 与 `batch_index.py` 对相同输入输出一致，新增边界测试确保错误路径不会改变既存合法路径结果。
 - 可用性：非法 `MACHINE_HEART_ROOT` 必须返回非 0 退出码，并在 stderr 给出可定位错误；合法调用返回 0。
 - 隐藏/敏感目录清单：`.git`、`.github`、`.hg`、`.svn`、`.idea`、`.vscode`、`node_modules`、`__pycache__`；此外任何以点开头的路径段均拒绝。`..` 逃逸、绝对路径、反斜杠分隔符、路径不存在、realpath 越界与符号链接目录/文件逃逸均由 `scripts/check-brief.js` 的 `getValidatedRoot()` 拒绝。

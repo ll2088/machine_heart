@@ -31,6 +31,7 @@ class CheckBriefTest(unittest.TestCase):
         shutil.copy2(ROOT / 'README.md', tmp / 'README.md')
         shutil.copy2(ROOT / 'docs' / 'ROADMAP.md', tmp / 'docs' / 'ROADMAP.md')
         shutil.copy2(ROOT / 'docs' / 'BATCHES.md', tmp / 'docs' / 'BATCHES.md')
+        shutil.copy2(ROOT / 'docs' / 'VERIFICATION.md', tmp / 'docs' / 'VERIFICATION.md')
         shutil.copy2(ROOT / 'scripts' / 'batch_index.py', tmp / 'scripts' / 'batch_index.py')
         shutil.copy2(ROOT / 'package.json', tmp / 'package.json')
         for rel, content in (mutate or {}).items():
@@ -136,6 +137,39 @@ class CheckBriefTest(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('不能指向隐藏目录或敏感路径', result.stderr)
+
+
+    def test_verification_missing_fails(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            (root / 'docs' / 'VERIFICATION.md').unlink()
+            result = self._run_node_with_root(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('docs/VERIFICATION.md 缺少关键验收内容', result.stderr)
+
+    def test_verification_missing_key_snippet_fails(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            verification = (root / 'docs' / 'VERIFICATION.md').read_text(encoding='utf-8')
+            verification = verification.replace('不做性能结论', '性能结论待定')
+            (root / 'docs' / 'VERIFICATION.md').write_text(verification, encoding='utf-8')
+            result = self._run_node_with_root(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('docs/VERIFICATION.md 缺少关键验收内容: 不做性能结论', result.stderr)
+
+    def test_batch_index_invalid_article_format_fails(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            (root / 'scripts' / 'batch_index.py').write_text(
+                'SOURCE = "machine_heart"\nARTICLES = (Article("bad", 0, "标题", "产业与生态", "https://mp.weixin.qq.com/x", "观点"),)\n',
+                encoding='utf-8',
+            )
+            result = self._run_node_with_root(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('batch_index.py 登记条数与 BATCHES 硬编码不一致', result.stderr)
 
 
 if __name__ == '__main__':

@@ -233,7 +233,8 @@ python3 scripts/update.py
 
 ## 验证与验收
 
-- 验收标准、验证维度、可执行命令与通过条件见 `docs/VERIFICATION.md`。
-- 性能不做收益结论：当前仅有上一轮 CI 的 medianMs=118、runs=3、samples=[113,118,161] 记录，缺少改动前后基线，不能据此宣称性能提升。
-- 跨平台路径契约：`MACHINE_HEART_ROOT` 仅接受 POSIX 风格相对路径；Windows 调用方使用 `/` 分隔，并已有正斜杠路径测试。
-- 证据要求：PR 附 `npm test`、`npm run test:python` 完整日志；`-v` 输出用例名与通过数；并发与清理测试须无临时目录残留。
+- 验收标准、CI 维度映射、跨平台矩阵与证据模板见 `docs/VERIFICATION.md`。
+- 性能不做收益结论：历史 CI 仅有耗时记录，缺少改动前后基线，本文不引用具体耗时作为验收指标。
+- 跨平台路径契约：`MACHINE_HEART_ROOT` 仅接受 POSIX 风格相对路径；Windows 调用方使用 `/` 分隔，三平台结果按 `docs/VERIFICATION.md` 矩阵记录，未执行不得填通过。
+- 证据要求：PR 附 `npm test`、`npm run test:python`（含 `-v`）完整日志，需含用例名、通过数、失败数 0；并发与清理测试须断言无临时目录残留。
+- 文档一致性：`npm test` 同时校验 README、`docs/BATCHES.md`、`docs/VERIFICATION.md` 与 `scripts/batch_index.py` 的关键契约一致。
