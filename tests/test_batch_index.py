@@ -92,6 +92,48 @@ class BatchIndexTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             batch_index.validate_articles(articles)
 
+    def test_validate_articles_accepts_empty(self) -> None:
+        batch_index.validate_articles(())
+
+    def test_validate_articles_rejects_non_sequence(self) -> None:
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles('not-a-sequence')  # type: ignore[arg-type]
+
+    def test_validate_articles_rejects_wrong_entry_type(self) -> None:
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(('not-an-article',))
+
+    def test_validate_articles_rejects_invalid_mid(self) -> None:
+        articles = (batch_index.Article('bad', 1, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_nonpositive_idx(self) -> None:
+        articles = (batch_index.Article('1', 0, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_blank_title(self) -> None:
+        articles = (batch_index.Article('1', 1, '   ', '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_main_invalid_articles_prints_stderr_and_returns_2(self) -> None:
+        original = batch_index.ARTICLES
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        try:
+            batch_index.ARTICLES = (
+                batch_index.Article('bad', 1, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', '观点'),
+            )
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                code = batch_index.main()
+            self.assertEqual(code, 2)
+            self.assertIn('[INVALID]', stderr.getvalue())
+            self.assertEqual(stdout.getvalue(), '')
+        finally:
+            batch_index.ARTICLES = original
+
     def test_main_idempotent_output(self) -> None:
         buffer1 = io.StringIO()
         buffer2 = io.StringIO()

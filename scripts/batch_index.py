@@ -49,14 +49,28 @@ def dedup_key(mid: str, idx: int) -> str:
 
 def validate_articles(articles: tuple[Article, ...] | list[Article]) -> None:
     '''校验文章清单的边界条件，避免重复、非法 URL 与未知属性进入索引。'''
+    if not isinstance(articles, (tuple, list)):
+        raise ValueError('articles 必须为 tuple 或 list')
     seen: set[tuple[str, int]] = set()
     for article in articles:
+        if not isinstance(article, Article):
+            raise ValueError(f'条目必须为 Article 类型，实际为 {type(article).__name__}')
+        if not isinstance(article.mid, str) or not article.mid or not article.mid.isdigit():
+            raise ValueError(f'mid 必须为非空数字字符串: {article.mid!r}')
+        if not isinstance(article.idx, int) or article.idx < 1:
+            raise ValueError(f'idx 必须为正整数: {article.idx!r}')
+        if not isinstance(article.title, str) or not article.title.strip():
+            raise ValueError('标题必须为非空字符串')
+        if not isinstance(article.mainline, str):
+            raise ValueError('mainline 必须为字符串')
+        if not isinstance(article.kind, str):
+            raise ValueError('kind 必须为字符串')
         if article.mainline not in VALID_MAINLINES:
             raise ValueError(f'未知主线: {article.mainline}')
         if article.kind not in VALID_KINDS:
             raise ValueError(f'未知属性: {article.kind}')
         url = article.url
-        if not url.startswith(('https://', 'http://')):
+        if not isinstance(url, str) or not url.startswith(('https://', 'http://')):
             raise ValueError(f'URL 必须以 http/https 开头: {url}')
         if 'mp.weixin.qq.com' not in url:
             raise ValueError(f'URL 必须指向机器之心公众号源: {url}')

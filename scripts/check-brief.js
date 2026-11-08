@@ -7,7 +7,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const root = path.resolve(__dirname, '..');
+const root = process.env.MACHINE_HEART_ROOT
+  ? path.resolve(process.env.MACHINE_HEART_ROOT)
+  : path.resolve(__dirname, '..');
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
 const batchPath = path.join(root, 'docs', 'BATCHES.md');
