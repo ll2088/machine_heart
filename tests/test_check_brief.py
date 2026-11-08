@@ -38,7 +38,8 @@ class CheckBriefTest(unittest.TestCase):
 
     def _run_node_with_root(self, root: Path) -> subprocess.CompletedProcess:
         env = os.environ.copy()
-        env['MACHINE_HEART_ROOT'] = str(root)
+        rel = os.path.relpath(root, ROOT)
+        env['MACHINE_HEART_ROOT'] = rel
         return subprocess.run(
             ['node', str(SCRIPT)],
             capture_output=True,
@@ -64,7 +65,7 @@ class CheckBriefTest(unittest.TestCase):
         self.assertNotIn('TypeError', result.stderr)
 
     def test_package_dependency_fails(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
             root = Path(tmp)
             self._write_fixture(root)
             pkg = (root / 'package.json').read_text(encoding='utf-8')
@@ -75,7 +76,7 @@ class CheckBriefTest(unittest.TestCase):
             self.assertIn('package.json 引入了第三方依赖', result.stderr)
 
     def test_batch_index_out_of_sync_fails(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
             root = Path(tmp)
             self._write_fixture(root)
             (root / 'scripts' / 'batch_index.py').write_text(
@@ -87,7 +88,7 @@ class CheckBriefTest(unittest.TestCase):
             self.assertIn('batch_index.py 登记条数与 BATCHES 硬编码不一致', result.stderr)
 
     def test_batches_missing_key_fails(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
             root = Path(tmp)
             self._write_fixture(root)
             batches = (root / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
@@ -96,6 +97,45 @@ class CheckBriefTest(unittest.TestCase):
             result = self._run_node_with_root(root)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('docs/BATCHES.md 缺少去重键', result.stderr)
+
+    def test_absolute_root_rejected(self) -> None:
+        env = os.environ.copy()
+        env['MACHINE_HEART_ROOT'] = '/etc'
+        result = subprocess.run(
+            ['node', str(SCRIPT)],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+            env=env,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('必须是相对于仓库根目录的相对路径', result.stderr)
+
+    def test_parent_root_rejected(self) -> None:
+        env = os.environ.copy()
+        env['MACHINE_HEART_ROOT'] = '..'
+        result = subprocess.run(
+            ['node', str(SCRIPT)],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+            env=env,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('不能使用 .. 逃逸仓库根目录', result.stderr)
+
+    def test_hidden_root_rejected(self) -> None:
+        env = os.environ.copy()
+        env['MACHINE_HEART_ROOT'] = '.git'
+        result = subprocess.run(
+            ['node', str(SCRIPT)],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+            env=env,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('不能指向隐藏目录或敏感路径', result.stderr)
 
 
 if __name__ == '__main__':

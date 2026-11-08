@@ -7,9 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const root = process.env.MACHINE_HEART_ROOT
-  ? path.resolve(process.env.MACHINE_HEART_ROOT)
-  : path.resolve(__dirname, '..');
+const root = getValidatedRoot();
 const readmePath = path.join(root, 'README.md');
 const roadmapPath = path.join(root, 'docs', 'ROADMAP.md');
 const batchPath = path.join(root, 'docs', 'BATCHES.md');
@@ -18,6 +16,49 @@ const errors = [];
 
 function fail(msg) {
   errors.push(msg);
+}
+
+function getValidatedRoot() {
+  const actualRoot = fs.realpathSync(path.resolve(__dirname, '..'));
+  const envRoot = process.env.MACHINE_HEART_ROOT;
+
+  if (!envRoot) {
+    return actualRoot;
+  }
+
+  if (path.isAbsolute(envRoot)) {
+    fail('MACHINE_HEART_ROOT 必须是相对于仓库根目录的相对路径，不能是绝对路径: ' + envRoot);
+    return actualRoot;
+  }
+
+  const normalized = path.normalize(envRoot);
+  if (normalized === '..' || normalized.startsWith('..' + path.sep)) {
+    fail('MACHINE_HEART_ROOT 不能使用 .. 逃逸仓库根目录: ' + envRoot);
+    return actualRoot;
+  }
+
+  const segments = normalized.split(path.sep);
+  if (segments.some((segment) => segment.startsWith('.'))) {
+    fail('MACHINE_HEART_ROOT 不能指向隐藏目录或敏感路径: ' + envRoot);
+    return actualRoot;
+  }
+
+  const candidate = path.resolve(actualRoot, envRoot);
+  let realCandidate;
+  try {
+    realCandidate = fs.realpathSync(candidate);
+  } catch (e) {
+    fail('MACHINE_HEART_ROOT 无法解析: ' + envRoot + ' (' + e.message + ')');
+    return actualRoot;
+  }
+
+  const relative = path.relative(actualRoot, realCandidate);
+  if (relative !== '' && (relative.startsWith('..') || path.isAbsolute(relative))) {
+    fail('MACHINE_HEART_ROOT 越界或符号链接逃逸: ' + envRoot + ' -> ' + realCandidate);
+    return actualRoot;
+  }
+
+  return realCandidate;
 }
 
 function readFile(p) {
