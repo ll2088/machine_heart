@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import sys
 import unittest
 from pathlib import Path
@@ -56,6 +58,78 @@ class BatchIndexTest(unittest.TestCase):
             batch_index.dedup_key('', 1)
         with self.assertRaises(ValueError):
             batch_index.dedup_key('2651072640', 0)
+        with self.assertRaises(ValueError):
+            batch_index.dedup_key('abc', 1)
+
+    def test_validate_articles_accepts_current(self) -> None:
+        batch_index.validate_articles(batch_index.ARTICLES)
+
+    def test_validate_articles_rejects_duplicate(self) -> None:
+        articles = (
+            batch_index.Article('1', 1, '标题', '具身智能与机器人', 'https://mp.weixin.qq.com/x', '技术'),
+            batch_index.Article('1', 1, '另一篇', '产业与生态', 'https://mp.weixin.qq.com/y', '观点'),
+        )
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_unknown_mainline(self) -> None:
+        articles = (batch_index.Article('1', 1, '标题', '未知主线', 'https://mp.weixin.qq.com/x', '技术'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_unknown_kind(self) -> None:
+        articles = (batch_index.Article('1', 1, '标题', '产业与生态', 'https://mp.weixin.qq.com/x', '八卦'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_bad_url(self) -> None:
+        articles = (batch_index.Article('1', 1, '标题', '产业与生态', 'ftp://example.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_validate_articles_rejects_non_weixin_url(self) -> None:
+        articles = (batch_index.Article('1', 1, '标题', '产业与生态', 'https://example.com/x', '观点'),)
+        with self.assertRaises(ValueError):
+            batch_index.validate_articles(articles)
+
+    def test_main_idempotent_output(self) -> None:
+        buffer1 = io.StringIO()
+        buffer2 = io.StringIO()
+        with contextlib.redirect_stdout(buffer1):
+            code = batch_index.main()
+        with contextlib.redirect_stdout(buffer2):
+            second = batch_index.main()
+        self.assertEqual(code, 0)
+        self.assertEqual(second, 0)
+        self.assertEqual(buffer1.getvalue(), buffer2.getvalue())
+        self.assertEqual(len(buffer1.getvalue().splitlines()), 12)
+
+    def test_main_rejects_invalid_articles(self) -> None:
+        original = batch_index.ARTICLES
+        try:
+            batch_index.ARTICLES = (batch_index.Article('bad', 0, '', '产业与生态', 'not-url', '观点'),)
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = batch_index.main()
+            self.assertEqual(code, 2)
+        finally:
+            batch_index.ARTICLES = original
+
+    def test_readme_contains_all_article_titles(self) -> None:
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        for article in batch_index.ARTICLES:
+            self.assertIn(article.title, readme)
+
+    def test_readme_topic_count_is_22(self) -> None:
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        blocks = readme.split('### 选题 ')[1:]
+        self.assertEqual(len(blocks), 22)
+
+    def test_batches_contains_all_dedup_keys(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        for key in batch_index.known_keys():
+            self.assertIn(key, batches)
 
 
 if __name__ == '__main__':

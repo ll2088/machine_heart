@@ -41,8 +41,8 @@ for (const s of requiredSections) {
 
 // 2. 选题条目不少于 5 条，且每条含四个字段
 const topicBlocks = readme.split(/^### 选题 /m).slice(1);
-if (topicBlocks.length < 5) {
-  fail('选题条目不足 5 条，当前为 ' + topicBlocks.length + ' 条');
+if (topicBlocks.length !== 22) {
+  fail('选题条目应为 22 条，当前为 ' + topicBlocks.length + ' 条');
 }
 
 const fieldLabels = ['标题', '来源链接', '一句话摘要', '推荐理由'];
@@ -125,6 +125,55 @@ for (const key of requiredBatchKeys) {
   if (!batches.includes(key)) {
     fail('docs/BATCHES.md 缺少去重键: ' + key);
   }
+}
+
+// 5. 读取 batch_index.py 的 ARTICLES，校验索引与文档同步。
+const batchIndexPy = readFile(path.join(root, 'scripts', 'batch_index.py'));
+const articleRe = /Article\('(\d+)',\s*(\d+),\s*'([^']*)',\s*'([^']*)',\s*'(https?:\/\/[^']+)'(?:,\s*'([^']*)')?\)/g;
+const actualBatchKeys = [];
+let match;
+while ((match = articleRe.exec(batchIndexPy)) !== null) {
+  const mid = match[1];
+  const idx = Number(match[2]);
+  const title = match[3];
+  const url = match[5];
+  const key = 'machine_heart:' + mid + ':' + idx;
+  actualBatchKeys.push(key);
+  if (!batches.includes(key)) {
+    fail('docs/BATCHES.md 缺少 batch_index.py 中的去重键: ' + key);
+  }
+  if (!readme.includes(title)) {
+    fail('README.md 缺少 batch_index.py 中的标题: ' + title);
+  }
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      fail('非法 URL 协议: ' + url);
+    }
+  } catch (e) {
+    fail('非法 URL: ' + url + ' (' + e.message + ')');
+  }
+}
+if (actualBatchKeys.length !== requiredBatchKeys.length) {
+  fail('batch_index.py 登记条数与 BATCHES 硬编码不一致: ' + actualBatchKeys.length + ' vs ' + requiredBatchKeys.length);
+}
+for (const key of requiredBatchKeys) {
+  if (!actualBatchKeys.includes(key)) {
+    fail('batch_index.py 缺少去重键: ' + key);
+  }
+}
+
+// 6. 零第三方依赖自检：package.json 不得声明 dependencies/devDependencies。
+const packageJsonText = readFile(path.join(root, 'package.json'));
+try {
+  const pkg = JSON.parse(packageJsonText);
+  const deps = Object.keys(pkg.dependencies || {});
+  const devDeps = Object.keys(pkg.devDependencies || {});
+  if (deps.length > 0 || devDeps.length > 0) {
+    fail('package.json 引入了第三方依赖: ' + deps.concat(devDeps).join(', '));
+  }
+} catch (e) {
+  fail('package.json 解析失败: ' + e.message);
 }
 
 const requiredMainlines = ['具身智能与机器人', '前沿模型与架构', '产业与生态'];

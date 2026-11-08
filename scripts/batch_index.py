@@ -6,9 +6,12 @@
 
 from __future__ import annotations
 
+import sys
 from typing import NamedTuple
 
 SOURCE = 'machine_heart'
+VALID_MAINLINES = {'具身智能与机器人', '前沿模型与架构', '产业与生态'}
+VALID_KINDS = {'待核实', '技术', '观点'}
 
 
 class Article(NamedTuple):
@@ -39,7 +42,28 @@ ARTICLES = (
 def dedup_key(mid: str, idx: int) -> str:
     if not mid or idx < 1:
         raise ValueError('mid 不能为空且 idx 必须为正整数')
+    if not mid.isdigit():
+        raise ValueError('mid 必须为数字字符串')
     return f'{SOURCE}:{mid}:{idx}'
+
+
+def validate_articles(articles: tuple[Article, ...] | list[Article]) -> None:
+    '''校验文章清单的边界条件，避免重复、非法 URL 与未知属性进入索引。'''
+    seen: set[tuple[str, int]] = set()
+    for article in articles:
+        if article.mainline not in VALID_MAINLINES:
+            raise ValueError(f'未知主线: {article.mainline}')
+        if article.kind not in VALID_KINDS:
+            raise ValueError(f'未知属性: {article.kind}')
+        url = article.url
+        if not url.startswith(('https://', 'http://')):
+            raise ValueError(f'URL 必须以 http/https 开头: {url}')
+        if 'mp.weixin.qq.com' not in url:
+            raise ValueError(f'URL 必须指向机器之心公众号源: {url}')
+        key = (article.mid, article.idx)
+        if key in seen:
+            raise ValueError(f'去重键重复: {dedup_key(article.mid, article.idx)}')
+        seen.add(key)
 
 
 def known_keys() -> tuple[str, ...]:
@@ -47,6 +71,11 @@ def known_keys() -> tuple[str, ...]:
 
 
 def main() -> int:
+    try:
+        validate_articles(ARTICLES)
+    except ValueError as exc:
+        print(f'[INVALID] {exc}', file=sys.stderr)
+        return 2
     for key in known_keys():
         print(key)
     return 0
