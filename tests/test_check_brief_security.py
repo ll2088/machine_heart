@@ -67,6 +67,24 @@ class CheckBriefSecurityTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('只能使用 / 作为路径分隔符', result.stderr)
 
+    def _copy_repo_fixture(self, dest: Path) -> None:
+        (dest / 'docs').mkdir(parents=True)
+        (dest / 'scripts').mkdir()
+        shutil.copy2(ROOT / 'README.md', dest / 'README.md')
+        shutil.copy2(ROOT / 'docs' / 'ROADMAP.md', dest / 'docs' / 'ROADMAP.md')
+        shutil.copy2(ROOT / 'docs' / 'BATCHES.md', dest / 'docs' / 'BATCHES.md')
+        shutil.copy2(ROOT / 'scripts' / 'batch_index.py', dest / 'scripts' / 'batch_index.py')
+        shutil.copy2(ROOT / 'package.json', dest / 'package.json')
+
+    def test_posix_style_relative_root_accepted(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-win-') as tmp:
+            root = Path(tmp)
+            self._copy_repo_fixture(root)
+            rel = os.path.relpath(root, ROOT).replace(os.sep, '/')
+            result = run_node(rel)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('简报校验通过', result.stdout)
+
     def test_symlink_directory_escape_rejected(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-link-') as tmp:
             root = Path(tmp)
@@ -109,6 +127,11 @@ class CheckBriefSecurityTest(unittest.TestCase):
         self.assertTrue(all(result.returncode == 0 for result in results))
         outputs = {result.stdout.strip() for result in results}
         self.assertEqual(len(outputs), 1)
+
+    def test_no_known_temp_prefix_residue(self) -> None:
+        prefixes = ('tmp-check-brief-link-', 'tmp-check-brief-win-', 'tmp-check-brief-security-')
+        residue = [p.name for p in ROOT.iterdir() if any(p.name.startswith(x) for x in prefixes)]
+        self.assertEqual(residue, [])
 
 
 if __name__ == '__main__':

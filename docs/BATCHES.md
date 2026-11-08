@@ -104,9 +104,13 @@
 
 ## 8. 安全边界与 CI 维度映射
 
+- 验收标准：逐条命令与通过条件见 `docs/VERIFICATION.md`；本节只列映射摘要。
 - 效果：`node scripts/check-brief.js` 验证 README 选题/专题结构、`docs/ROADMAP.md` 专题一致性与 `docs/BATCHES.md` 12 个去重键；`python3 scripts/batch_index.py` 输出 12 行去重键；Python unittest 覆盖去重键唯一、非法参数与 `scripts/update.py` 幂等退出码。
-- 性能：本仓库脚本仅读取本仓库目录且零第三方依赖，验收上以重复执行时间和退出码稳定为准；当前未引入网络或大文件扫描，预期单次校验时间小于 200ms。
+- 性能：不做收益结论。上一轮 CI 仅记录 medianMs=118、runs=3、samples=[113,118,161]，无改动前后基线，不能支撑性能提升；如需结论，按 `docs/VERIFICATION.md` 补前后各 3 次耗时，否则标注“不做性能结论”。
 - 稳定性：`check-brief.js` 与 `batch_index.py` 对相同输入输出一致，新增边界测试确保错误路径不会改变既存合法路径结果。
 - 可用性：非法 `MACHINE_HEART_ROOT` 必须返回非 0 退出码，并在 stderr 给出可定位错误；合法调用返回 0。
 - 隐藏/敏感目录清单：`.git`、`.github`、`.hg`、`.svn`、`.idea`、`.vscode`、`node_modules`、`__pycache__`；此外任何以点开头的路径段均拒绝。`..` 逃逸、绝对路径、反斜杠分隔符、路径不存在、realpath 越界与符号链接目录/文件逃逸均由 `scripts/check-brief.js` 的 `getValidatedRoot()` 拒绝。
-- 验证证据提交要求：PR 中需附 `npm test`、`npm run test:python` 的完整日志，以及上述安全边界测试的通过数量；性能数据需记录改动前后各至少 3 次运行耗时。
+- 跨平台：`MACHINE_HEART_ROOT` 仅接受 POSIX 风格相对路径；反斜杠会被拒绝并提示“只能使用 / 作为路径分隔符”。Windows 调用方使用 `/`，`test_posix_style_relative_root_accepted` 覆盖正斜杠合法路径。
+- 调用点：`scripts/batch_index.py` 的入口为 CLI、`tests/test_batch_index.py` 直接 import、`scripts/check-brief.js` 正则解析 `ARTICLES`；`main()` 捕获 `ValueError` 返回 2 并输出 `[INVALID]`，合法路径不受影响。
+- 并发与清理：`test_concurrent_runs_are_isolated` 并发 4 次输出一致；`test_fixture_cleanup_after_failure` 与 `test_no_known_temp_prefix_residue` 验证临时目录无残留。
+- 验证证据提交要求：PR 中需附 `npm test`、`npm run test:python` 的完整日志（`-v` 含用例名与通过数），以及 `find . -maxdepth 1 -name 'tmp-check-brief*'` 为空的结果；性能数据需前后各至少 3 次，否则标注“不做性能结论”。

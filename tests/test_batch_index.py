@@ -146,6 +146,16 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(buffer1.getvalue(), buffer2.getvalue())
         self.assertEqual(len(buffer1.getvalue().splitlines()), 12)
 
+    def test_main_stdout_matches_known_keys(self) -> None:
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = batch_index.main()
+        self.assertEqual(code, 0)
+        self.assertEqual(buffer.getvalue().splitlines(), list(batch_index.known_keys()))
+
+    def test_known_keys_stable_contract(self) -> None:
+        self.assertEqual(batch_index.dedup_key('2651072888', 3), 'machine_heart:2651072888:3')
+
     def test_main_rejects_invalid_articles(self) -> None:
         original = batch_index.ARTICLES
         try:

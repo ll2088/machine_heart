@@ -3,6 +3,7 @@
 
 // 零依赖校验脚本：检查 README.md 选题简报结构与字段完整性，
 // 并校验 docs/ROADMAP.md 的专题跟踪清单与 README 专题名称一一对应。
+// MACHINE_HEART_ROOT 契约：仅接受 POSIX 风格相对路径；Windows 调用方使用 / 分隔。
 
 const fs = require('fs');
 const path = require('path');
