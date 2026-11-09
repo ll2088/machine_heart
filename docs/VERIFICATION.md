@@ -10,8 +10,8 @@
 
 | 维度 | 可执行命令 | 通过条件 | 证据 | 费用/人力 | 备选方案 |
 | --- | --- | --- | --- | --- | --- |
-| 效果 | `npm test` | 退出码 0，stdout 含“简报校验通过: 22 条选题, 6 个专题” | 完整 stdout | 0 元，0.2 小时 | 若失败，先跑 `python3 scripts/check-brief.js` 定位；不跳过失败项 |
-| 结构 | `python3 scripts/batch_index.py` | 退出码 0，stdout 恰好 12 行且等于 `known_keys()` | 12 行去重键 | 0 元，0.1 小时 | 行数不符时回退新增行并重跑 |
+| 效果 | `npm test` | 退出码 0，stdout 含“简报校验通过: 25 条选题, 6 个专题” | 完整 stdout | 0 元，0.2 小时 | 若失败，先跑 `python3 scripts/check-brief.js` 定位；不跳过失败项 |
+| 结构 | `python3 scripts/batch_index.py` | 退出码 0，stdout 恰好 15 行且等于 `known_keys()` | 15 行去重键 | 0 元，0.1 小时 | 行数不符时回退新增行并重跑 |
 | 单测 | `npm run test:python` | 退出码 0；`-v` 日志显示全部测试名及 `OK`；失败数为 0 | 用例列表与通过数 | 0 元，0.5 小时 | 仅 Node 环境可用时，先跑 `npm test` 并记录 Python 待执行 |
 | 安全 | 见第 3 节命令 | 绝对路径、`..`、隐藏/敏感目录、不存在路径、反斜杠、符号链接逃逸均被拒绝；合法正斜杠路径通过 | stderr 关键字与退出码 | 0 元，0.5 小时 | 平台不支持符号链接时跳过该条并标注原因，不伪造通过 |
 | 稳定性 | 连续运行 `npm test` 与 `npm run test:python` 各 2 次 | 相同输入 stdout 完全一致，退出码一致 | 前后输出 diff 为空 | 0 元，0.3 小时 | 不一致时保留两次日志并阻断合并 |
@@ -22,7 +22,7 @@
 
 | CI 维度 | 对应验收项 | 可执行命令 | 通过条件 | 证据 |
 | --- | --- | --- | --- | --- |
-| 效果 | 简报结构、文档一致性 | `npm test` | 退出码 0，stdout 含“简报校验通过: 22 条选题, 6 个专题, 文档一致性通过” | 完整 stdout |
+| 效果 | 简报结构、文档一致性 | `npm test` | 退出码 0，stdout 含“简报校验通过: 25 条选题, 6 个专题, 文档一致性通过” | 完整 stdout |
 | 性能 | 不做收益结论 | 无收益命令 | 不采集 medianMs、不设收益阈值；只记录“不做性能结论” | 无 |
 | 稳定性 | 重复执行与并发隔离 | `npm test`、`npm run test:python` 各 2 次 | 相同输入 stdout 与退出码一致；并发 4 次输出集合大小为 1 | 两次日志 diff 为空 |
 | 可用性 | 安全边界与错误传播 | 第 3 节命令、`python3 scripts/batch_index.py` | 非法路径均非 0 且 stderr 含关键字；合法路径返回 0；索引输出 12 行 | stderr 与退出码 |
@@ -32,7 +32,7 @@
 PR 必须附以下原始证据，未实际执行的项目标注“未执行”，不得填通过：
 1. `npm test` 完整 stdout；
 2. `npm run test:python`（含 `-v`）完整日志，需出现 `test_batch_index`、`test_check_brief`、`test_check_brief_security` 的用例名、通过数、失败数 0；
-3. `python3 scripts/batch_index.py` 的 12 行去重键；
+3. `python3 scripts/batch_index.py` 的 15 行去重键；
 4. `find . -maxdepth 1 -name 'tmp-check-brief*'` 空输出；
 5. 三平台路径用例结果；仅实际跑过的平台填“通过”。
 
@@ -58,7 +58,7 @@ PR 必须附以下原始证据，未实际执行的项目标注“未执行”�
 ## 4. 调用点与错误传播
 
 - `scripts/batch_index.py` 调用点：CLI `python3 scripts/batch_index.py`；`tests/test_batch_index.py` 直接 `import batch_index`；`scripts/check-brief.js` 用正则解析 `ARTICLES` 与文档同步。
-- 错误传播：`main()` 捕获 `validate_articles()` 的 `ValueError`，向 stderr 输出 `[INVALID] ...` 并返回 2；成功路径返回 0 且 stdout 为 12 行。新增 `test_main_stdout_matches_known_keys` 与 `test_known_keys_stable_contract` 覆盖成功契约与键格式。
+- 错误传播：`main()` 捕获 `validate_articles()` 的 `ValueError`，向 stderr 输出 `[INVALID] ...` 并返回 2；成功路径返回 0 且 stdout 为 15 行。新增 `test_main_stdout_matches_known_keys` 与 `test_known_keys_stable_contract` 覆盖成功契约与键格式。
 - 兼容路径：现有合法 `ARTICLES` 不变；新增测试只读调用，不修改全局清单；`check-brief.js` 的正则仍匹配原有 `Article(...)` 形式。
 - 异常分支覆盖：`validate_articles()` 对空序列、非序列、非 `Article`、非法 mid/idx、空白标题、非字符串字段、未知主线/属性、非 http(s) URL、非机器之心 URL 均抛 `ValueError`；`main()` 捕获后 stderr 输出 `[INVALID]` 并返回 2。
 - 全部调用点验证：CLI 由 `test_main_*` 覆盖；unittest import 由 `test_validate_articles_*` 覆盖；`check-brief.js` 正则解析由 `test_batch_index_out_of_sync_fails` 与非法 Article 格式用例覆盖。
@@ -74,6 +74,14 @@ PR 必须附以下原始证据，未实际执行的项目标注“未执行”�
 | 2026-10-27 | 性能不采集 medianMs、不设收益阈值；如需结论才记录前后各 3 次耗时 | 性能说明 | 0 元，0.2 小时 | 无基线则明确“不做性能结论” |
 
 合计：云资源 0 元；人工约 2 小时；不引入第三方依赖。
+
+## 5.1 批次 2651073140 验证小节
+
+- 批次号：2651073140；三篇文章去重键为 `machine_heart:2651073140:1/2/3`，主题标签分别为「物理验证」「云电脑智能体」「触觉推理」。
+- 结构校验：`node scripts/check-brief.js` 需在 `docs/BATCHES.md` 中命中三个去重键与三个主题标签，且 `scripts/batch_index.py` 登记条数为 15。
+- 归档校验：`python3 scripts/update.py` 连续两次运行均退出码 0，输出一致且包含三篇文章标题，无重复条目。
+- 拒绝行为：`tests/test_check_brief.py` 新增缺主题标签用例，预期非 0 且 stderr 含“缺少主题标签”。
+- 证据：PR 附 `npm test`、`node scripts/check-brief.js`、`python3 scripts/update.py` 两次运行的完整日志。
 
 ## 6. 不确定项
 

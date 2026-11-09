@@ -122,8 +122,8 @@ for (const s of requiredSections) {
 
 // 2. 选题条目不少于 5 条，且每条含四个字段
 const topicBlocks = readme.split(/^### 选题 /m).slice(1);
-if (topicBlocks.length !== 22) {
-  fail('选题条目应为 22 条，当前为 ' + topicBlocks.length + ' 条');
+if (topicBlocks.length !== 25) {
+  fail('选题条目应为 25 条，当前为 ' + topicBlocks.length + ' 条');
 }
 
 const fieldLabels = ['标题', '来源链接', '一句话摘要', '推荐理由'];
@@ -201,6 +201,9 @@ const requiredBatchKeys = [
   'machine_heart:2651072774:1',
   'machine_heart:2651072774:2',
   'machine_heart:2651072774:3',
+  'machine_heart:2651073140:1',
+  'machine_heart:2651073140:2',
+  'machine_heart:2651073140:3',
 ];
 for (const key of requiredBatchKeys) {
   if (!batches.includes(key)) {
@@ -278,7 +281,7 @@ for (const name of requiredMainlines) {
   }
 }
 
-const requiredAttributes = ['技术', '观点'];
+const requiredAttributes = ['技术', '观点', '物理验证', '云电脑智能体', '触觉推理'];
 for (const name of requiredAttributes) {
   if (!batches.includes(name)) {
     fail('docs/BATCHES.md 缺少属性: ' + name);
