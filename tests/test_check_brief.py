@@ -159,6 +159,22 @@ class CheckBriefTest(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('docs/VERIFICATION.md 缺少关键验收内容: 不做性能结论', result.stderr)
 
+    def test_new_batch_articles_pass(self) -> None:
+        result = run_node()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('简报校验通过', result.stdout)
+
+    def test_missing_topic_tag_fails(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
+            root = Path(tmp)
+            self._write_fixture(root)
+            batches = (root / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+            batches = batches.replace('| 物理验证 |', '| 待定 |')
+            (root / 'docs' / 'BATCHES.md').write_text(batches, encoding='utf-8')
+            result = self._run_node_with_root(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('缺少主题标签', result.stderr)
+
     def test_batch_index_invalid_article_format_fails(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT, prefix='tmp-check-brief-') as tmp:
             root = Path(tmp)

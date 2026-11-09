@@ -41,6 +41,29 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertEqual(first.stdout, second.stdout)
         self.assertEqual(first.returncode, second.returncode)
 
+    def test_three_articles_archived_with_tags(self) -> None:
+        result = run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for tag in ('物理验证', '云电脑智能体', '触觉推理'):
+            self.assertIn('tag=' + tag, result.stdout)
+        self.assertEqual(result.stdout.count('[ARCHIVE]'), 3)
+
+    def test_archive_idempotent(self) -> None:
+        first = run_script()
+        second = run_script()
+        self.assertEqual(first.stdout, second.stdout)
+        self.assertEqual(first.stdout.count('[ARCHIVE]'), 3)
+
+    def test_batch_index_contains_batch(self) -> None:
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        try:
+            import batch_index
+        finally:
+            sys.path.pop(0)
+        keys = batch_index.known_keys()
+        for idx in (1, 2, 3):
+            self.assertIn('machine_heart:2651073140:' + str(idx), keys)
+
     def test_docs_structure(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         roadmap = (ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
