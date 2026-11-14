@@ -37,6 +37,43 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(set(keys), EXPECTED)
         self.assertEqual(len(set(keys)), len(keys))
 
+    def test_new_articles_are_archived(self) -> None:
+        self.assertEqual(len(batch_index.NEW_ARTICLES), 6)
+        self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 12)
+        for article in batch_index.NEW_ARTICLES:
+            self.assertIn(article, batch_index.ARCHIVED_ARTICLES)
+
+    def test_new_articles_classification(self) -> None:
+        by_mainline = {}
+        for article in batch_index.NEW_ARTICLES:
+            by_mainline.setdefault(article.mainline, []).append(article)
+        self.assertEqual(len(by_mainline['具身智能与机器人']), 2)
+        self.assertEqual(len(by_mainline['前沿模型与架构']), 2)
+        self.assertEqual(len(by_mainline['产业与生态']), 2)
+        self.assertEqual(sum(1 for a in batch_index.NEW_ARTICLES if a.kind == '技术'), 4)
+        self.assertEqual(sum(1 for a in batch_index.NEW_ARTICLES if a.kind == '观点'), 2)
+
+    def test_new_articles_have_valid_urls(self) -> None:
+        for article in batch_index.NEW_ARTICLES:
+            self.assertTrue(article.url.startswith('https://'))
+            self.assertIn('mp.weixin.qq.com', article.url)
+            self.assertIn('mid=' + article.mid, article.url)
+            self.assertIn('idx=' + str(article.idx), article.url)
+
+    def test_batches_doc_has_batch_index_section(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        self.assertIn('## 3. 批次索引', batches)
+        self.assertIn('### 3.1 已知批次与文章清单', batches)
+        self.assertIn('### 3.2 本轮新增批次', batches)
+
+    def test_batches_doc_lists_new_keys_with_mainline_and_kind(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        for article in batch_index.NEW_ARTICLES:
+            key = batch_index.dedup_key(article.mid, article.idx)
+            self.assertIn(key, batches)
+            self.assertIn(article.mainline, batches)
+            self.assertIn(article.kind, batches)
+
     def test_articles_unique_by_mid_idx(self) -> None:
         pairs = {(article.mid, article.idx) for article in batch_index.ARTICLES}
         self.assertEqual(len(pairs), 12)

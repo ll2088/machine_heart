@@ -49,6 +49,37 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertIn("退出码", roadmap)
         self.assertIn("## 阶段 1 完成标准", roadmap)
 
+    def test_readme_has_usage_section(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("## 使用说明", readme)
+        section = readme.split("## 使用说明")[1].split("## ")[0]
+        self.assertGreater(len(section.strip()), 0)
+
+    def test_batches_doc_has_batch_index_section(self) -> None:
+        batches = (ROOT / "docs" / "BATCHES.md").read_text(encoding="utf-8")
+        self.assertIn("## 3. 批次索引", batches)
+        section = batches.split("## 3. 批次索引")[1].split("## ")[0]
+        self.assertGreater(len(section.strip()), 0)
+
+    def test_update_script_archives_articles_without_duplicates(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        keys = batch_index.known_keys()
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertEqual(len(keys), 12)
+        for article in batch_index.NEW_ARTICLES:
+            self.assertIn(batch_index.dedup_key(article.mid, article.idx), keys)
+
+    def test_repeated_runs_do_not_duplicate_archive_entries(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        first = batch_index.known_keys()
+        second = batch_index.known_keys()
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), len(set(first)))
+
 
 if __name__ == "__main__":
     unittest.main()

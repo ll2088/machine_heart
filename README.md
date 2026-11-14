@@ -175,6 +175,16 @@ python3 scripts/update.py
 - 一句话摘要：介绍 Tool-Calling Agent 训练数据合成从“先出题”转向“先探索”的新思路，涉及可验证 Agent 学习的数据构造；方法与实验待回源。
 - 推荐理由：对 Agent 研发有参考价值，适合与专题二、专题五联动；会议时间与命名需核对。
 
+## 使用说明
+
+本节说明如何运行定时更新脚本、如何归档新批次文章，以及如何执行校验。
+
+1. 运行更新脚本：`python3 scripts/update.py`，正常退出码为 0，stdout 输出一条 `[UPDATE]` 记录；脚本不访问网络、不写文件，可重复执行。
+2. 归档新批次：在 `scripts/batch_index.py` 的 `NEW_ARTICLES` 中追加 `Article(mid, idx, title, mainline, url, kind)`，去重键固定为 `machine_heart:<mid>:<idx>`，只追加不覆盖。
+3. 同步文档：在 `docs/BATCHES.md` 的「批次索引」小节登记去重键与主线，并在本文件「选题简报」新增对应选题条目。
+4. 执行校验：`npm test` 校验 README 选题/专题结构、`docs/BATCHES.md` 去重键与 `scripts/batch_index.py` 一致性；`npm run test:python` 运行 Python 单元测试。
+5. 回源核实：所有量化指标、开源协议与会议命名在引用前必须回源确认，未核实前保持「待核实」状态。
+
 ## 专题跟踪
 
 以下六个专题与 docs/ROADMAP.md 中的「专题跟踪清单」逐条对应，名称保持一致，便于跨文档核对。
@@ -217,6 +227,7 @@ python3 scripts/update.py
 ### 专题六：产业生态与开源基座
 
 - 覆盖选题：选题 14（Personal Agent 架构）、选题 15（百度文心 5.5 Flash Base）、选题 17（ICLR 2027 评审观点）、选题 21（State of AI 2026 趋势观点）。
+- 本轮新增：选题 17（ICLR 2027 评审观点，观点类）、选题 21（State of AI 2026 趋势观点，观点类）；两条均为观点素材，不作为事实性结论引用。
 - 跟踪要点：核实开源协议、参数规模、推理成本与 Agent 记忆/生态架构，判断是否纳入基座选型对比表。
 - 产出形式：生态动向归档 + 选型备忘。
 - 优先级：中。
@@ -224,7 +235,7 @@ python3 scripts/update.py
 ## 来源与日期
 
 - 内容来源：机器之心微信公众号更新，共 22 篇（原有 10 篇 + 已归档两个 mid 批次 6 篇 + 本轮新增两个 mid 批次 6 篇），链接见各选题条目。
-- 批次归档：mid=2651072640、2651072404、2651072888 与 2651072774 的 idx 1-3 已登记到 docs/BATCHES.md，去重键固定为 machine_heart:<mid>:<idx>。
+- 批次归档：mid=2651072640、2651072404、2651072888 与 2651072774 的 idx 1-3 已登记到 docs/BATCHES.md，去重键固定为 machine_heart:<mid>:<idx>；本轮新增 6 篇登记于 scripts/batch_index.py 的 NEW_ARTICLES。
 - 整理日期：2026-10-25（与 docs/ROADMAP.md 生成时间同日；非文章发布时间）。
 - 数据性质：摘要与推荐理由来自搜索简报研判，属外部不可信数据，未经原文逐篇核实；标注「需回源确认」的条目在引用前必须二次核实。
 - 已知不确定项：选题 4、5、6 的标题与搜索简报摘要存在对应关系不明；选题 17-22 的会议命名、医疗安全表述、VLA 3.4 倍提速条件、跨机器人经验复用与 Tool-Calling Agent 数据合成细节均需回源确认，不得直接作为事实引用。
