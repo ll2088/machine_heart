@@ -73,6 +73,23 @@ class UpdateScriptTest(unittest.TestCase):
         for article in batch_index.LATEST_ARTICLES:
             self.assertIn(batch_index.dedup_key(article.mid, article.idx), keys)
 
+    def test_archived_articles_have_unique_keys(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        keys = batch_index.known_keys()
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertEqual(len(keys), len(batch_index.ARCHIVED_ARTICLES))
+
+    def test_new_articles_not_double_counted_in_archive(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        archived_pairs = {(a.mid, a.idx) for a in batch_index.ARCHIVED_ARTICLES}
+        for article in batch_index.NEW_ARTICLES:
+            self.assertIn((article.mid, article.idx), archived_pairs)
+        self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 18)
+
     def test_repeated_runs_do_not_duplicate_archive_entries(self) -> None:
         sys.path.insert(0, str(ROOT / "scripts"))
         import batch_index  # noqa: E402

@@ -41,12 +41,6 @@ ARTICLES = (
 # 本轮搜索简报新增批次（mid=2651072888 / 2651072774），仅登记 idx 1-3，
 # 量化指标与会议命名均待回源核实，不得直接作为事实引用。
 NEW_ARTICLES = (
-    Article('2651072888', 1, 'ICLR 2027首轮评审，槽点有点多', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072888&idx=1&sn=653a56cbd49310e83158f277d56a993b', '观点'),
-    Article('2651072888', 2, 'GPT-6.1 Sol参与活体大脑手术！三轮定位，一次比一次准', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072888&idx=2&sn=7451fe12fd75fc3295e0e71c0235040a', '技术'),
-    Article('2651072888', 3, '英伟达等重新设计VLA推理！机器人动作提速3.4倍', '具身智能与机器人', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072888&idx=3&sn=75cf566a70af17c8a5cfa30d459aab8b', '技术'),
-    Article('2651072774', 1, '陶大程教授最新技术文章：一台机器人犯过的错，怎样让另一台少走弯路？', '具身智能与机器人', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=1&sn=17484407e18d75fca1e41a09be82bc03', '技术'),
-    Article('2651072774', 2, 'State of AI 2026：AGI 2027 真的会来吗？', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=2&sn=8b8a1f19a5fb23e7b97328ab977f5e6e', '观点'),
-    Article('2651072774', 3, 'NeurIPS 2026 | 从「先出题」到「先探索」：重新思考Tool-Calling Agent的训练数据合成', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=3&sn=7907f035a6b5b83908acc800cf7b3d96', '技术'),
 )
 
 # 本轮搜索简报新增批次（mid=2651074362 / 2651074135），仅登记 idx 1-3，
@@ -61,7 +55,9 @@ LATEST_ARTICLES = (
 )
 
 # 归档清单 = 已归档批次 + 本轮新增批次 + 最新批次，供 known_keys() 与校验脚本统一读取。
-ARCHIVED_ARTICLES = ARTICLES + NEW_ARTICLES + LATEST_ARTICLES
+# 注意：ARTICLES 已包含 mid=2651072888 / 2651072774 的 6 条，NEW_ARTICLES 仅作
+# 语义分组引用，不得再次拼入 ARCHIVED_ARTICLES，否则会产生重复去重键。
+ARCHIVED_ARTICLES = ARTICLES + LATEST_ARTICLES
 
 
 def dedup_key(mid: str, idx: int) -> str:

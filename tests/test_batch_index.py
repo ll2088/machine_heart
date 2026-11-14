@@ -48,9 +48,22 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(len(batch_index.LATEST_ARTICLES), 6)
         self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 18)
         for article in batch_index.NEW_ARTICLES:
-            self.assertIn(article, batch_index.ARCHIVED_ARTICLES)
+            self.assertIn(article, batch_index.ARTICLES)
         for article in batch_index.LATEST_ARTICLES:
             self.assertIn(article, batch_index.ARCHIVED_ARTICLES)
+
+    def test_archived_articles_have_no_duplicate_keys(self) -> None:
+        keys = batch_index.known_keys()
+        self.assertEqual(len(keys), len(set(keys)))
+        pairs = [(a.mid, a.idx) for a in batch_index.ARCHIVED_ARTICLES]
+        self.assertEqual(len(pairs), len(set(pairs)))
+
+    def test_new_articles_not_double_counted(self) -> None:
+        '''NEW_ARTICLES 与 ARTICLES 指向同一批 mid，不得在归档清单中重复计入。'''
+        archived_pairs = {(a.mid, a.idx) for a in batch_index.ARCHIVED_ARTICLES}
+        for article in batch_index.NEW_ARTICLES:
+            self.assertIn((article.mid, article.idx), archived_pairs)
+        self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 18)
 
     def test_new_articles_classification(self) -> None:
         by_mainline = {}
