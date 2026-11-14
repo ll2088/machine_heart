@@ -13,7 +13,7 @@
 - 规则：mid 取 URL 的 mid 参数，idx 取同批次序号；只按 mid+idx 去重，sn 仅作辅助；新 idx 只追加，不覆盖已读；idx 从 1 开始。
 - 固化位置：`scripts/batch_index.py` 的 `ARTICLES`、`NEW_ARTICLES`、`LATEST_ARTICLES` 与 `dedup_key()`；`scripts/check-brief.js` 以 `batch_index.py` 为唯一数据源，动态解析并校验本文档包含全部去重键（当前 18 个），不再硬编码条数。
 
-## 3. 批次索引
+## 批次索引
 
 本节为批次索引的规范小节，登记全部 18 条去重键、主线与属性；去重键格式为 `machine_heart:<mid>:<idx>`，只追加不覆盖。条数以 `scripts/batch_index.py` 的 `ARCHIVED_ARTICLES` 为准，`scripts/check-brief.js` 运行时动态解析，避免硬编码漂移。
 

@@ -71,7 +71,7 @@ class BatchIndexTest(unittest.TestCase):
 
     def test_batches_doc_has_batch_index_section(self) -> None:
         batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
-        self.assertIn('## 3. 批次索引', batches)
+        self.assertIn('## 批次索引', batches)
         self.assertIn('### 3.1 已知批次与文章清单', batches)
         self.assertIn('### 3.2 本轮新增批次', batches)
 

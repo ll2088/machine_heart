@@ -120,7 +120,42 @@ for (const s of requiredSections) {
   }
 }
 
-// 2. 选题条目数必须与 batch_index.py 实际登记条数一致（唯一数据源，避免硬编码漂移）。
+// 2. 读取 batch_index.py 的 Article 条目，作为去重键与选题计数的唯一数据源。
+//    必须在任何使用 actualBatchKeys 的校验之前完成解析，避免暂时性死区（TDZ）。
+const batchIndexPy = readFile(path.join(root, 'scripts', 'batch_index.py'));
+const articleRe = /Article\('(\d+)',\s*(\d+),\s*'([^']*)',\s*'([^']*)',\s*'(https?:\/\/[^']+)'(?:,\s*'([^']*)')?\)/g;
+const actualBatchKeys = [];
+let match;
+while ((match = articleRe.exec(batchIndexPy)) !== null) {
+  const mid = match[1];
+  const idx = Number(match[2]);
+  const title = match[3];
+  const url = match[5];
+  const key = 'machine_heart:' + mid + ':' + idx;
+  actualBatchKeys.push(key);
+  if (!batches.includes(key)) {
+    fail('docs/BATCHES.md 缺少 batch_index.py 中的去重键: ' + key);
+  }
+  if (!readme.includes(title)) {
+    fail('README.md 缺少 batch_index.py 中的标题: ' + title);
+  }
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      fail('非法 URL 协议: ' + url);
+    }
+  } catch (e) {
+    fail('非法 URL: ' + url + ' (' + e.message + ')');
+  }
+}
+if (actualBatchKeys.length === 0) {
+  fail('batch_index.py 未解析到任何去重键');
+}
+if (new Set(actualBatchKeys).size !== actualBatchKeys.length) {
+  fail('batch_index.py 存在重复去重键');
+}
+
+// 3. 选题条目数必须与 batch_index.py 实际登记条数一致（唯一数据源，避免硬编码漂移）。
 const topicBlocks = readme.split(/^### 选题 /m).slice(1);
 if (topicBlocks.length !== actualBatchKeys.length) {
   fail('选题条目数应为 ' + actualBatchKeys.length + ' 条（与 batch_index.py 登记一致），当前为 ' + topicBlocks.length + ' 条');
@@ -140,7 +175,7 @@ topicBlocks.forEach((block, i) => {
   }
 });
 
-// 3. 专题名称一致性：README 专题标题 vs ROADMAP 表格首列
+// 4. 专题名称一致性：README 专题标题 vs ROADMAP 表格首列
 function extractReadmeTopics(text) {
   const names = [];
   const re = /^### 专题[一二三四五六七八九十]+：(.+)$/gm;
@@ -187,41 +222,7 @@ for (const t of roadmapTopics) {
   }
 }
 
-// 4. 读取 batch_index.py 的 ARTICLES，作为去重键与选题计数的唯一数据源。
-const batchIndexPy = readFile(path.join(root, 'scripts', 'batch_index.py'));
-const articleRe = /Article\('(\d+)',\s*(\d+),\s*'([^']*)',\s*'([^']*)',\s*'(https?:\/\/[^']+)'(?:,\s*'([^']*)')?\)/g;
-const actualBatchKeys = [];
-let match;
-while ((match = articleRe.exec(batchIndexPy)) !== null) {
-  const mid = match[1];
-  const idx = Number(match[2]);
-  const title = match[3];
-  const url = match[5];
-  const key = 'machine_heart:' + mid + ':' + idx;
-  actualBatchKeys.push(key);
-  if (!batches.includes(key)) {
-    fail('docs/BATCHES.md 缺少 batch_index.py 中的去重键: ' + key);
-  }
-  if (!readme.includes(title)) {
-    fail('README.md 缺少 batch_index.py 中的标题: ' + title);
-  }
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      fail('非法 URL 协议: ' + url);
-    }
-  } catch (e) {
-    fail('非法 URL: ' + url + ' (' + e.message + ')');
-  }
-}
-if (actualBatchKeys.length === 0) {
-  fail('batch_index.py 未解析到任何去重键');
-}
-if (new Set(actualBatchKeys).size !== actualBatchKeys.length) {
-  fail('batch_index.py 存在重复去重键');
-}
-
-// 6. 零第三方依赖自检：package.json 不得声明 dependencies/devDependencies。
+// 5. 零第三方依赖自检：package.json 不得声明 dependencies/devDependencies。
 const packageJsonText = readFile(path.join(root, 'package.json'));
 try {
   const pkg = JSON.parse(packageJsonText);

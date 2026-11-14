@@ -57,8 +57,8 @@ class UpdateScriptTest(unittest.TestCase):
 
     def test_batches_doc_has_batch_index_section(self) -> None:
         batches = (ROOT / "docs" / "BATCHES.md").read_text(encoding="utf-8")
-        self.assertIn("## 3. 批次索引", batches)
-        section = batches.split("## 3. 批次索引")[1].split("## ")[0]
+        self.assertIn("## 批次索引", batches)
+        section = batches.split("## 批次索引")[1].split("## ")[0]
         self.assertGreater(len(section.strip()), 0)
 
     def test_update_script_archives_articles_without_duplicates(self) -> None:
@@ -100,8 +100,8 @@ class UpdateScriptTest(unittest.TestCase):
 
     def test_batches_doc_has_required_sections(self) -> None:
         batches = (ROOT / "docs" / "BATCHES.md").read_text(encoding="utf-8")
-        self.assertIn("## 3. 批次索引", batches)
-        section = batches.split("## 3. 批次索引")[1].split("## ")[0]
+        self.assertIn("## 批次索引", batches)
+        section = batches.split("## 批次索引")[1].split("## ")[0]
         self.assertGreater(len(section.strip()), 0)
 
     def test_roadmap_has_roadmap_section(self) -> None:
