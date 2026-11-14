@@ -120,10 +120,10 @@ for (const s of requiredSections) {
   }
 }
 
-// 2. 选题条目不少于 5 条，且每条含四个字段
+// 2. 选题条目数必须与 batch_index.py 实际登记条数一致（唯一数据源，避免硬编码漂移）。
 const topicBlocks = readme.split(/^### 选题 /m).slice(1);
-if (topicBlocks.length !== 22) {
-  fail('选题条目应为 22 条，当前为 ' + topicBlocks.length + ' 条');
+if (topicBlocks.length !== actualBatchKeys.length) {
+  fail('选题条目数应为 ' + actualBatchKeys.length + ' 条（与 batch_index.py 登记一致），当前为 ' + topicBlocks.length + ' 条');
 }
 
 const fieldLabels = ['标题', '来源链接', '一句话摘要', '推荐理由'];
@@ -187,34 +187,7 @@ for (const t of roadmapTopics) {
   }
 }
 
-// 4. 批次归档：去重键与三条主线必须落盘
-const requiredBatchKeys = [
-  'machine_heart:2651072640:1',
-  'machine_heart:2651072640:2',
-  'machine_heart:2651072640:3',
-  'machine_heart:2651072404:1',
-  'machine_heart:2651072404:2',
-  'machine_heart:2651072404:3',
-  'machine_heart:2651072888:1',
-  'machine_heart:2651072888:2',
-  'machine_heart:2651072888:3',
-  'machine_heart:2651072774:1',
-  'machine_heart:2651072774:2',
-  'machine_heart:2651072774:3',
-  'machine_heart:2651074362:1',
-  'machine_heart:2651074362:2',
-  'machine_heart:2651074362:3',
-  'machine_heart:2651074135:1',
-  'machine_heart:2651074135:2',
-  'machine_heart:2651074135:3',
-];
-for (const key of requiredBatchKeys) {
-  if (!batches.includes(key)) {
-    fail('docs/BATCHES.md 缺少去重键: ' + key);
-  }
-}
-
-// 5. 读取 batch_index.py 的 ARTICLES，校验索引与文档同步。
+// 4. 读取 batch_index.py 的 ARTICLES，作为去重键与选题计数的唯一数据源。
 const batchIndexPy = readFile(path.join(root, 'scripts', 'batch_index.py'));
 const articleRe = /Article\('(\d+)',\s*(\d+),\s*'([^']*)',\s*'([^']*)',\s*'(https?:\/\/[^']+)'(?:,\s*'([^']*)')?\)/g;
 const actualBatchKeys = [];
@@ -241,13 +214,11 @@ while ((match = articleRe.exec(batchIndexPy)) !== null) {
     fail('非法 URL: ' + url + ' (' + e.message + ')');
   }
 }
-if (actualBatchKeys.length !== requiredBatchKeys.length) {
-  fail('batch_index.py 登记条数与 BATCHES 硬编码不一致: ' + actualBatchKeys.length + ' vs ' + requiredBatchKeys.length);
+if (actualBatchKeys.length === 0) {
+  fail('batch_index.py 未解析到任何去重键');
 }
-for (const key of requiredBatchKeys) {
-  if (!actualBatchKeys.includes(key)) {
-    fail('batch_index.py 缺少去重键: ' + key);
-  }
+if (new Set(actualBatchKeys).size !== actualBatchKeys.length) {
+  fail('batch_index.py 存在重复去重键');
 }
 
 // 6. 零第三方依赖自检：package.json 不得声明 dependencies/devDependencies。
@@ -297,4 +268,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题, 文档一致性通过');
+console.log('简报校验通过: ' + topicBlocks.length + ' 条选题, ' + readmeTopics.length + ' 个专题, ' + actualBatchKeys.length + ' 个去重键, 文档一致性通过');

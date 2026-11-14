@@ -11,11 +11,11 @@
 - 格式：`machine_heart:<mid>:<idx>`。
 - 示例：`machine_heart:2651072640:1`。
 - 规则：mid 取 URL 的 mid 参数，idx 取同批次序号；只按 mid+idx 去重，sn 仅作辅助；新 idx 只追加，不覆盖已读；idx 从 1 开始。
-- 固化位置：`scripts/batch_index.py` 的 `ARTICLES` 与 `dedup_key()`；`scripts/check-brief.js` 校验本文档包含 12 个键。
+- 固化位置：`scripts/batch_index.py` 的 `ARTICLES`、`NEW_ARTICLES`、`LATEST_ARTICLES` 与 `dedup_key()`；`scripts/check-brief.js` 以 `batch_index.py` 为唯一数据源，动态解析并校验本文档包含全部去重键（当前 18 个），不再硬编码条数。
 
 ## 3. 批次索引
 
-本节为批次索引的规范小节，登记全部 18 条去重键、主线与属性；去重键格式为 `machine_heart:<mid>:<idx>`，只追加不覆盖。
+本节为批次索引的规范小节，登记全部 18 条去重键、主线与属性；去重键格式为 `machine_heart:<mid>:<idx>`，只追加不覆盖。条数以 `scripts/batch_index.py` 的 `ARCHIVED_ARTICLES` 为准，`scripts/check-brief.js` 运行时动态解析，避免硬编码漂移。
 
 ### 3.1 已知批次与文章清单
 
@@ -106,7 +106,7 @@
 
 ## 6. 验收与测试
 
-- `node scripts/check-brief.js`：校验 README 选题/专题结构、ROADMAP 专题一致性、本文档 18 个去重键/三条主线/技术观点属性，以及 `docs/VERIFICATION.md` 的关键验收契约。
+- `node scripts/check-brief.js`：以 `scripts/batch_index.py` 为唯一数据源，校验 README 选题/专题结构、ROADMAP 专题一致性、本文档全部去重键（当前 18 个）/三条主线/技术观点属性，以及 `docs/VERIFICATION.md` 的关键验收契约。
 - `python3 scripts/batch_index.py`：预期输出 18 行去重键。
 - `python3 -m unittest discover -s tests -p 'test_*.py'`：校验去重键唯一、格式正确、非法参数被拒绝。
 
@@ -123,7 +123,7 @@
 ## 8. 安全边界与 CI 维度映射
 
 - 验收标准：逐条命令与通过条件见 `docs/VERIFICATION.md`；本节只列映射摘要。
-- 效果：`node scripts/check-brief.js` 验证 README 选题/专题结构、`docs/ROADMAP.md` 专题一致性与 `docs/BATCHES.md` 12 个去重键；`python3 scripts/batch_index.py` 输出 12 行去重键；Python unittest 覆盖去重键唯一、非法参数与 `scripts/update.py` 幂等退出码。
+- 效果：`node scripts/check-brief.js` 验证 README 选题/专题结构、`docs/ROADMAP.md` 专题一致性与 `docs/BATCHES.md` 全部去重键（当前 18 个）；`python3 scripts/batch_index.py` 输出 18 行去重键；Python unittest 覆盖去重键唯一、非法参数与 `scripts/update.py` 幂等退出码。
 - 性能：不做收益结论。历史 CI 只有耗时记录，无改动前后基线，本文不引用具体耗时；如需结论，按 `docs/VERIFICATION.md` 补前后各 3 次耗时，否则标注“不做性能结论”。
 - 稳定性：`check-brief.js` 与 `batch_index.py` 对相同输入输出一致，新增边界测试确保错误路径不会改变既存合法路径结果。
 - 可用性：非法 `MACHINE_HEART_ROOT` 必须返回非 0 退出码，并在 stderr 给出可定位错误；合法调用返回 0。

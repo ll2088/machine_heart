@@ -82,6 +82,34 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(len(first), len(set(first)))
 
+    def test_update_script_archives_latest_articles(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        keys = batch_index.known_keys()
+        for article in batch_index.LATEST_ARTICLES:
+            self.assertIn(batch_index.dedup_key(article.mid, article.idx), keys)
+        self.assertEqual(len(keys), len(batch_index.ARCHIVED_ARTICLES))
+
+    def test_repeated_runs_keep_archive_count_stable(self) -> None:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        counts = {len(batch_index.known_keys()) for _ in range(3)}
+        self.assertEqual(counts, {len(batch_index.ARCHIVED_ARTICLES)})
+
+    def test_batches_doc_has_required_sections(self) -> None:
+        batches = (ROOT / "docs" / "BATCHES.md").read_text(encoding="utf-8")
+        self.assertIn("## 3. 批次索引", batches)
+        section = batches.split("## 3. 批次索引")[1].split("## ")[0]
+        self.assertGreater(len(section.strip()), 0)
+
+    def test_roadmap_has_roadmap_section(self) -> None:
+        roadmap = (ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        self.assertIn("## 路线图", roadmap)
+        section = roadmap.split("## 路线图")[1].split("## ")[0]
+        self.assertGreater(len(section.strip()), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -229,6 +229,26 @@ class BatchIndexTest(unittest.TestCase):
         for key in batch_index.known_keys():
             self.assertIn(key, batches)
 
+    def test_check_brief_derives_counts_from_batch_index(self) -> None:
+        '''check-brief.js 不得再硬编码去重键清单或选题条数，须以 batch_index.py 为唯一数据源。'''
+        script = (ROOT / 'scripts' / 'check-brief.js').read_text(encoding='utf-8')
+        self.assertNotIn('requiredBatchKeys', script)
+        self.assertNotIn('machine_heart:2651072640:1', script)
+        self.assertIn('actualBatchKeys', script)
+        self.assertIn('batch_index.py', script)
+
+    def test_check_brief_topic_count_matches_batch_index(self) -> None:
+        '''README 选题条目数必须与 batch_index.py 登记条数一致，防止再次漂移。'''
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        blocks = readme.split('### 选题 ')[1:]
+        self.assertEqual(len(blocks), len(batch_index.ARCHIVED_ARTICLES))
+
+    def test_batches_doc_count_matches_batch_index(self) -> None:
+        '''BATCHES.md 中出现的去重键数量必须与 batch_index.py 登记条数一致。'''
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        found = [key for key in batch_index.known_keys() if key in batches]
+        self.assertEqual(len(found), len(batch_index.ARCHIVED_ARTICLES))
+
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:
         bad_entries = (
