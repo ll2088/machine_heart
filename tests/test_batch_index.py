@@ -251,10 +251,12 @@ class BatchIndexTest(unittest.TestCase):
         self.assertIn('batch_index.py', script)
 
     def test_check_brief_topic_count_matches_batch_index(self) -> None:
-        '''README 选题条目数必须与 batch_index.py 登记条数一致，防止再次漂移。'''
+        '''README 选题条目数必须不少于 batch_index.py 登记条数，且每条登记标题都出现在 README 中。'''
         readme = (ROOT / 'README.md').read_text(encoding='utf-8')
         blocks = readme.split('### 选题 ')[1:]
-        self.assertEqual(len(blocks), len(batch_index.ARCHIVED_ARTICLES))
+        self.assertGreaterEqual(len(blocks), len(batch_index.ARCHIVED_ARTICLES))
+        for article in batch_index.ARCHIVED_ARTICLES:
+            self.assertIn(article.title, readme)
 
     def test_batches_doc_count_matches_batch_index(self) -> None:
         '''BATCHES.md 中出现的去重键数量必须与 batch_index.py 登记条数一致。'''

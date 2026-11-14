@@ -155,10 +155,12 @@ if (new Set(actualBatchKeys).size !== actualBatchKeys.length) {
   fail('batch_index.py 存在重复去重键');
 }
 
-// 3. 选题条目数必须与 batch_index.py 实际登记条数一致（唯一数据源，避免硬编码漂移）。
+// 3. 选题条目数校验：README 选题块数量必须不少于 batch_index.py 登记条数，
+//    且 batch_index.py 中每条标题都必须出现在 README 中（单一数据源，避免硬编码漂移）。
+//    README 允许包含未进入 batch_index.py 的历史选题（如原有 10 篇），因此只做下界校验。
 const topicBlocks = readme.split(/^### 选题 /m).slice(1);
-if (topicBlocks.length !== actualBatchKeys.length) {
-  fail('选题条目数应为 ' + actualBatchKeys.length + ' 条（与 batch_index.py 登记一致），当前为 ' + topicBlocks.length + ' 条');
+if (topicBlocks.length < actualBatchKeys.length) {
+  fail('选题条目数应不少于 batch_index.py 登记条数 ' + actualBatchKeys.length + ' 条，当前为 ' + topicBlocks.length + ' 条');
 }
 
 const fieldLabels = ['标题', '来源链接', '一句话摘要', '推荐理由'];
