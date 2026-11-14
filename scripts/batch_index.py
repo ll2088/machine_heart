@@ -49,8 +49,19 @@ NEW_ARTICLES = (
     Article('2651072774', 3, 'NeurIPS 2026 | 从「先出题」到「先探索」：重新思考Tool-Calling Agent的训练数据合成', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=3&sn=7907f035a6b5b83908acc800cf7b3d96', '技术'),
 )
 
-# 归档清单 = 已归档批次 + 本轮新增批次，供 known_keys() 与校验脚本统一读取。
-ARCHIVED_ARTICLES = ARTICLES + NEW_ARTICLES
+# 本轮搜索简报新增批次（mid=2651074362 / 2651074135），仅登记 idx 1-3，
+# 量化指标、开源协议与产品命名均待回源核实，不得直接作为事实引用。
+LATEST_ARTICLES = (
+    Article('2651074362', 1, '后GPT-6时代，具身数据怎么做？Ropedia发布Xperience 2，给出下一代数据基石金标准', '具身智能与机器人', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074362&idx=1&sn=c3ceac43168f01cb87b9bb3c28fa9877', '技术'),
+    Article('2651074362', 2, '斯坦福让GPT-6 Astra直接修改机器人参数：只动65行词嵌入，修复一类指令失灵', '具身智能与机器人', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074362&idx=2&sn=5a8b2bef8739a7443d5e57b276c4d80a', '技术'),
+    Article('2651074362', 3, 'ICSE 2027 | 清华提出CoACT：降低Coding Agent 33% Token开销', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074362&idx=3&sn=da18bc335c6b6345ee976e60b4009347', '技术'),
+    Article('2651074135', 1, '10秒生成4K图：MiniMax再次拿出开源SOTA', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074135&idx=1&sn=94195be03009adcb3b3e390782573b38', '技术'),
+    Article('2651074135', 2, 'Grok Bot 1.0正式发布！马斯克教AI和你的团队一起工作', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074135&idx=2&sn=2019b2d7e4f158bb07852a889f5a7b17', '技术'),
+    Article('2651074135', 3, '64张B300、不到5天，FireFlash比肩Fable 5与GPT-6Sol，单任务成本低30倍！', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651074135&idx=3&sn=f702c61a40c6ebe66be517d551e8d6b6', '技术'),
+)
+
+# 归档清单 = 已归档批次 + 本轮新增批次 + 最新批次，供 known_keys() 与校验脚本统一读取。
+ARCHIVED_ARTICLES = ARTICLES + NEW_ARTICLES + LATEST_ARTICLES
 
 
 def dedup_key(mid: str, idx: int) -> str:

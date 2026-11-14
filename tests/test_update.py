@@ -67,8 +67,10 @@ class UpdateScriptTest(unittest.TestCase):
 
         keys = batch_index.known_keys()
         self.assertEqual(len(keys), len(set(keys)))
-        self.assertEqual(len(keys), 12)
+        self.assertEqual(len(keys), 18)
         for article in batch_index.NEW_ARTICLES:
+            self.assertIn(batch_index.dedup_key(article.mid, article.idx), keys)
+        for article in batch_index.LATEST_ARTICLES:
             self.assertIn(batch_index.dedup_key(article.mid, article.idx), keys)
 
     def test_repeated_runs_do_not_duplicate_archive_entries(self) -> None:

@@ -27,20 +27,29 @@ EXPECTED = {
     'machine_heart:2651072774:1',
     'machine_heart:2651072774:2',
     'machine_heart:2651072774:3',
+    'machine_heart:2651074362:1',
+    'machine_heart:2651074362:2',
+    'machine_heart:2651074362:3',
+    'machine_heart:2651074135:1',
+    'machine_heart:2651074135:2',
+    'machine_heart:2651074135:3',
 }
 
 
 class BatchIndexTest(unittest.TestCase):
-    def test_known_keys_cover_four_batches(self) -> None:
+    def test_known_keys_cover_six_batches(self) -> None:
         keys = batch_index.known_keys()
-        self.assertEqual(len(keys), 12)
+        self.assertEqual(len(keys), 18)
         self.assertEqual(set(keys), EXPECTED)
         self.assertEqual(len(set(keys)), len(keys))
 
     def test_new_articles_are_archived(self) -> None:
         self.assertEqual(len(batch_index.NEW_ARTICLES), 6)
-        self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 12)
+        self.assertEqual(len(batch_index.LATEST_ARTICLES), 6)
+        self.assertEqual(len(batch_index.ARCHIVED_ARTICLES), 18)
         for article in batch_index.NEW_ARTICLES:
+            self.assertIn(article, batch_index.ARCHIVED_ARTICLES)
+        for article in batch_index.LATEST_ARTICLES:
             self.assertIn(article, batch_index.ARCHIVED_ARTICLES)
 
     def test_new_articles_classification(self) -> None:
@@ -75,8 +84,8 @@ class BatchIndexTest(unittest.TestCase):
             self.assertIn(article.kind, batches)
 
     def test_articles_unique_by_mid_idx(self) -> None:
-        pairs = {(article.mid, article.idx) for article in batch_index.ARTICLES}
-        self.assertEqual(len(pairs), 12)
+        pairs = {(article.mid, article.idx) for article in batch_index.ARCHIVED_ARTICLES}
+        self.assertEqual(len(pairs), 18)
 
     def test_new_articles_have_kind(self) -> None:
         new_articles = [
@@ -181,7 +190,7 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(second, 0)
         self.assertEqual(buffer1.getvalue(), buffer2.getvalue())
-        self.assertEqual(len(buffer1.getvalue().splitlines()), 12)
+        self.assertEqual(len(buffer1.getvalue().splitlines()), 18)
 
     def test_main_stdout_matches_known_keys(self) -> None:
         buffer = io.StringIO()
@@ -210,10 +219,10 @@ class BatchIndexTest(unittest.TestCase):
         for article in batch_index.ARTICLES:
             self.assertIn(article.title, readme)
 
-    def test_readme_topic_count_is_22(self) -> None:
+    def test_readme_topic_count_is_28(self) -> None:
         readme = (ROOT / 'README.md').read_text(encoding='utf-8')
         blocks = readme.split('### 选题 ')[1:]
-        self.assertEqual(len(blocks), 22)
+        self.assertEqual(len(blocks), 28)
 
     def test_batches_contains_all_dedup_keys(self) -> None:
         batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')

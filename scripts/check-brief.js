@@ -201,6 +201,12 @@ const requiredBatchKeys = [
   'machine_heart:2651072774:1',
   'machine_heart:2651072774:2',
   'machine_heart:2651072774:3',
+  'machine_heart:2651074362:1',
+  'machine_heart:2651074362:2',
+  'machine_heart:2651074362:3',
+  'machine_heart:2651074135:1',
+  'machine_heart:2651074135:2',
+  'machine_heart:2651074135:3',
 ];
 for (const key of requiredBatchKeys) {
   if (!batches.includes(key)) {
