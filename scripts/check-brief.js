@@ -144,6 +144,16 @@ function main() {
     errors.push(
       `batch_index.py 登记条数与 BATCHES 硬编码不一致: ${indexedCount} vs ${sectionTwoKeys.length}`
     );
+    const indexedSet = new Set(indexedKeys);
+    const sectionSet = new Set(sectionTwoKeys);
+    const missingInBatches = indexedKeys.filter((key) => !sectionSet.has(key));
+    const extraInBatches = sectionTwoKeys.filter((key) => !indexedSet.has(key));
+    if (missingInBatches.length > 0) {
+      errors.push(`BATCHES 第 2 节缺失的键: ${missingInBatches.join(', ')}`);
+    }
+    if (extraInBatches.length > 0) {
+      errors.push(`BATCHES 第 2 节多余的键: ${extraInBatches.join(', ')}`);
+    }
   }
 
   // 3. 第 2 节清单内容与 known_keys() 顺序一致。

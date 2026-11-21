@@ -309,6 +309,29 @@ class BatchIndexTest(unittest.TestCase):
         self.assertIn('countIndexedArticles', script)
         self.assertIn('extractBatchesSectionTwoKeys', script)
 
+    def test_check_brief_reports_key_diffs(self) -> None:
+        """check-brief.js 在数量不一致时输出具体缺失/多余的键名，便于定位漂移。"""
+        script = (ROOT / 'scripts' / 'check-brief.js').read_text(encoding='utf-8')
+        self.assertIn('missingInBatches', script)
+        self.assertIn('extraInBatches', script)
+        self.assertIn('BATCHES 第 2 节缺失的键', script)
+        self.assertIn('BATCHES 第 2 节多余的键', script)
+
+    def test_batches_section_two_parse_matches_index_exactly(self) -> None:
+        """按 check-brief.js 的正则解析第 2 节，结果必须与 known_keys() 完全一致。"""
+        import re
+
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        section = batches.split('## 2. 去重键契约', 1)[1].split('## 3.', 1)[0]
+        pattern = re.compile(r'^\s*-\s*`(machine_heart:[0-9]+:[0-9]+)`\s*$')
+        parsed = [
+            match.group(1)
+            for line in section.splitlines()
+            if (match := pattern.match(line)) is not None
+        ]
+        self.assertEqual(parsed, list(batch_index.known_keys()))
+        self.assertEqual(len(parsed), 15)
+
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:
         bad_entries = (
