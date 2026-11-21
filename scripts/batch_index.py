@@ -84,6 +84,7 @@ def validate_articles(articles: tuple[Article, ...] | list[Article]) -> None:
 
 
 def known_keys() -> tuple[str, ...]:
+    """按 ARTICLES 声明顺序返回去重键，顺序与 docs/BATCHES.md 第 2 节一致。"""
     return tuple(dedup_key(article.mid, article.idx) for article in ARTICLES)
 
 

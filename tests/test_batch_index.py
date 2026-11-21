@@ -228,6 +228,52 @@ class BatchIndexTest(unittest.TestCase):
         for idx in (1, 2, 3):
             self.assertIn(f'machine_heart:2651075493:{idx}', batches)
 
+    def test_new_batch_indexed_without_duplicates(self) -> None:
+        """新增批次被正确索引，且重复运行不产生重复条目。"""
+        keys = batch_index.known_keys()
+        new_keys = [key for key in keys if key.startswith('machine_heart:2651075493:')]
+        self.assertEqual(
+            new_keys,
+            [
+                'machine_heart:2651075493:1',
+                'machine_heart:2651075493:2',
+                'machine_heart:2651075493:3',
+            ],
+        )
+        self.assertEqual(len(keys), len(set(keys)))
+        buffer1 = io.StringIO()
+        buffer2 = io.StringIO()
+        with contextlib.redirect_stdout(buffer1):
+            first = batch_index.main()
+        with contextlib.redirect_stdout(buffer2):
+            second = batch_index.main()
+        self.assertEqual(first, 0)
+        self.assertEqual(second, 0)
+        self.assertEqual(buffer1.getvalue(), buffer2.getvalue())
+
+    def test_known_keys_order_matches_batches_section_two(self) -> None:
+        """批次索引输出顺序与 docs/BATCHES.md 第 2 节硬编码清单顺序一致。"""
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        section = batches.split('## 2. 去重键契约', 1)[1].split('## 3.', 1)[0]
+        hardcoded = [
+            line.strip().lstrip('- ').strip('`')
+            for line in section.splitlines()
+            if line.strip().startswith('- `machine_heart:')
+        ]
+        self.assertEqual(hardcoded, list(batch_index.known_keys()))
+
+    def test_batches_section_two_count_matches_index(self) -> None:
+        """第 2 节硬编码去重键数量与 batch_index.py 登记条数一致（单一事实来源）。"""
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        section = batches.split('## 2. 去重键契约', 1)[1].split('## 3.', 1)[0]
+        hardcoded = [
+            line.strip().lstrip('- ').strip('`')
+            for line in section.splitlines()
+            if line.strip().startswith('- `machine_heart:')
+        ]
+        self.assertEqual(len(hardcoded), len(batch_index.known_keys()))
+        self.assertEqual(len(hardcoded), 15)
+
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:
         bad_entries = (

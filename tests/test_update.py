@@ -87,6 +87,43 @@ class UpdateScriptTest(unittest.TestCase):
         keys = [record.split("key=", 1)[1].split(" ", 1)[0] for record in records]
         self.assertEqual(len(keys), len(set(keys)))
 
+    def test_archive_records_cover_three_new_articles_with_fields(self) -> None:
+        """模拟三篇新文章输入，断言归档条目含标题、来源与日期字段。"""
+        result = run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = [line for line in result.stdout.splitlines() if line.startswith("[ARCHIVE]")]
+        self.assertEqual(len(records), 3)
+        expected_titles = (
+            "登顶全球第一：这支AI音乐团队，凭什么用18个月打败Suno？",
+            "AGI还不是终点，DeepMind开始思考ASI的未来",
+            "上海AI Lab开源Sage S2.1 Flash技术报告：四项智能体基准SOTA，科学多模态感知如何融入通用智能体？",
+        )
+        for record, title in zip(records, expected_titles):
+            self.assertIn(f"title={title}", record)
+            self.assertIn("source=machine_heart", record)
+            self.assertIn("date=2026-10-25", record)
+
+    def test_archive_records_absent_keeps_base_record_and_index(self) -> None:
+        """缺少新文章时，基础更新记录保留，且不破坏已有批次索引。"""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("update_module", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        original = module.ARCHIVE_ENTRIES
+        try:
+            module.ARCHIVE_ENTRIES = ()
+            self.assertEqual(module.build_archive_records(), [])
+            self.assertTrue(module.build_record().startswith("[UPDATE]"))
+        finally:
+            module.ARCHIVE_ENTRIES = original
+        # 已有批次索引不受影响：batch_index 仍登记 15 条。
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        self.assertEqual(len(batch_index.known_keys()), 15)
+
     def test_missing_archive_entries_keeps_base_record(self) -> None:
         import importlib.util
 

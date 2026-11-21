@@ -45,7 +45,11 @@ def build_record() -> str:
 
 
 def build_archive_records() -> list[str]:
-    """构造本轮新增文章的归档条目，字段固定为 key/title/source/date。"""
+    """构造本轮新增文章的归档条目，字段固定为 key/title/source/date。
+
+    条目顺序与 ARCHIVE_ENTRIES 声明顺序一致，保证重复执行输出幂等；
+    缺少条目时返回空列表，不影响 build_record() 的基础更新记录。
+    """
     return [
         "[ARCHIVE] key={key} title={title} source={source} date={date}".format(
             key=entry["key"],
