@@ -47,9 +47,14 @@ function countTopics(readme) {
   return matches ? matches.length : 0;
 }
 
-/** 从 batch_index.py 的 ARTICLES 元组统计 Article(...) 登记条数。 */
+/**
+ * 从 batch_index.py 的 ARTICLES 元组统计 Article(...) 登记条数。
+ *
+ * 只匹配构造调用 `Article('mid', idx, ...)`，不匹配类型判断
+ * `isinstance(article, Article)` 等非登记用法，避免把校验代码计为条目。
+ */
 function countIndexedArticles(source) {
-  const matches = source.match(/Article\(/g);
+  const matches = source.match(/Article\(\s*'[0-9]+'\s*,\s*\d+\s*,/g);
   return matches ? matches.length : 0;
 }
 
