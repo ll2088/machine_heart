@@ -81,6 +81,12 @@ class UpdateScriptTest(unittest.TestCase):
         second = run_script()
         self.assertEqual(first.stdout, second.stdout)
 
+    def test_archive_records_do_not_duplicate_keys(self) -> None:
+        result = run_script()
+        records = [line for line in result.stdout.splitlines() if line.startswith("[ARCHIVE]")]
+        keys = [record.split("key=", 1)[1].split(" ", 1)[0] for record in records]
+        self.assertEqual(len(keys), len(set(keys)))
+
     def test_missing_archive_entries_keeps_base_record(self) -> None:
         import importlib.util
 

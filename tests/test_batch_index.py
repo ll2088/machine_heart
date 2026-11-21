@@ -212,6 +212,22 @@ class BatchIndexTest(unittest.TestCase):
         for key in batch_index.known_keys():
             self.assertIn(key, batches)
 
+    def test_batches_hardcoded_key_count_matches_index(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        section = batches.split('## 2. 去重键契约', 1)[1].split('## 3.', 1)[0]
+        hardcoded = [
+            line.strip().lstrip('- ').strip('`')
+            for line in section.splitlines()
+            if line.strip().startswith('- `machine_heart:')
+        ]
+        self.assertEqual(len(hardcoded), 15)
+        self.assertEqual(hardcoded, list(batch_index.known_keys()))
+
+    def test_batches_new_batch_keys_present(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        for idx in (1, 2, 3):
+            self.assertIn(f'machine_heart:2651075493:{idx}', batches)
+
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:
         bad_entries = (
