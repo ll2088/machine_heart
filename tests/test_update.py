@@ -180,6 +180,15 @@ class UpdateScriptTest(unittest.TestCase):
             self.assertEqual(entry["date"], "2026-10-25")
             self.assertTrue(entry["title"].strip())
 
+    def test_check_brief_expectations_align_with_sources(self) -> None:
+        """check-brief.js 的期望值来自数据源，避免 22/25 与 12/15 漂移。"""
+        script = (ROOT / "scripts" / "check-brief.js").read_text(encoding="utf-8")
+        self.assertNotIn("应为 22 条", script)
+        self.assertNotIn("12 个", script)
+        self.assertIn("countTopics", script)
+        self.assertIn("countIndexedArticles", script)
+        self.assertIn("extractBatchesSectionTwoKeys", script)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -294,11 +294,20 @@ class BatchIndexTest(unittest.TestCase):
         self.assertNotIn('12 个去重键', batches)
 
     def test_readme_topic_count_matches_batches_batch_count(self) -> None:
-        """README 选题数与 BATCHES 去重键数保持可核对关系（25 条选题 / 15 个键）。"""
+        """README 选题数与 BATCHES 去重键数保持可核对关系（选题数 >= 去重键数）。"""
         readme = (ROOT / 'README.md').read_text(encoding='utf-8')
         blocks = readme.split('### 选题 ')[1:]
-        self.assertEqual(len(blocks), 25)
+        self.assertGreaterEqual(len(blocks), len(batch_index.known_keys()))
         self.assertEqual(len(batch_index.known_keys()), 15)
+
+    def test_check_brief_reads_expectations_from_sources(self) -> None:
+        """check-brief.js 不再硬编码 22/12，期望值从 README 与 batch_index.py 动态读取。"""
+        script = (ROOT / 'scripts' / 'check-brief.js').read_text(encoding='utf-8')
+        self.assertNotIn('应为 22 条', script)
+        self.assertNotIn('12 个', script)
+        self.assertIn('countTopics', script)
+        self.assertIn('countIndexedArticles', script)
+        self.assertIn('extractBatchesSectionTwoKeys', script)
 
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:

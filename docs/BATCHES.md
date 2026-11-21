@@ -11,8 +11,8 @@
 - 格式：`machine_heart:<mid>:<idx>`。
 - 示例：`machine_heart:2651072640:1`。
 - 规则：mid 取 URL 的 mid 参数，idx 取同批次序号；只按 mid+idx 去重，sn 仅作辅助；新 idx 只追加，不覆盖已读；idx 从 1 开始。
-- 固化位置：`scripts/batch_index.py` 的 `ARTICLES` 与 `dedup_key()`；`scripts/check-brief.js` 校验本文档包含 15 个键。
-- 硬编码去重键清单（共 15 个，与 `scripts/batch_index.py` 登记条数一致；本轮由 12 个补齐为 15 个，新增 mid=2651075493 的 idx 1-3）。清单顺序必须与 `scripts/batch_index.py` 的 `known_keys()` 输出顺序完全一致，数量与内容均以该函数为单一事实来源：
+- 固化位置：`scripts/batch_index.py` 的 `ARTICLES` 与 `dedup_key()`；`scripts/check-brief.js` 动态读取 `batch_index.py` 登记条数与本节清单，二者必须一致（当前均为 15）。
+- 硬编码去重键清单（共 15 个，与 `scripts/batch_index.py` 登记条数一致；本轮由 12 个补齐为 15 个，新增 mid=2651075493 的 idx 1-3）。清单顺序必须与 `scripts/batch_index.py` 的 `known_keys()` 输出顺序完全一致，数量与内容均以该函数为单一事实来源。每行格式固定为 `- \`machine_heart:<mid>:<idx>\``，供 `scripts/check-brief.js` 解析：
   - `machine_heart:2651072640:1`
   - `machine_heart:2651072640:2`
   - `machine_heart:2651072640:3`
