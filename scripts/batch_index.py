@@ -36,6 +36,9 @@ ARTICLES = (
     Article('2651072774', 1, '陶大程教授最新技术文章：一台机器人犯过的错，怎样让另一台少走弯路？', '具身智能与机器人', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=1&sn=17484407e18d75fca1e41a09be82bc03', '技术'),
     Article('2651072774', 2, 'State of AI 2026：AGI 2027 真的会来吗？', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=2&sn=8b8a1f19a5fb23e7b97328ab977f5e6e', '观点'),
     Article('2651072774', 3, 'NeurIPS 2026 | 从「先出题」到「先探索」：重新思考Tool-Calling Agent的训练数据合成', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651072774&idx=3&sn=7907f035a6b5b83908acc800cf7b3d96', '技术'),
+    Article('2651075493', 1, '登顶全球第一：这支AI音乐团队，凭什么用18个月打败Suno？', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651075493&idx=1&sn=f8ab8aea34e7c653723fdeab5ae401bd', '待核实'),
+    Article('2651075493', 2, 'AGI还不是终点，DeepMind开始思考ASI的未来', '产业与生态', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651075493&idx=2&sn=7806a7ce49d42c7e0dcd482bf2f18913', '待核实'),
+    Article('2651075493', 3, '上海AI Lab开源Sage S2.1 Flash技术报告：四项智能体基准SOTA，科学多模态感知如何融入通用智能体？', '前沿模型与架构', 'https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2651075493&idx=3&sn=63643451e794a6d8ac3dbb423d7f460d', '待核实'),
 )
 
 

@@ -27,19 +27,48 @@ EXPECTED = {
     'machine_heart:2651072774:1',
     'machine_heart:2651072774:2',
     'machine_heart:2651072774:3',
+    'machine_heart:2651075493:1',
+    'machine_heart:2651075493:2',
+    'machine_heart:2651075493:3',
 }
 
 
 class BatchIndexTest(unittest.TestCase):
-    def test_known_keys_cover_four_batches(self) -> None:
+    def test_known_keys_cover_five_batches(self) -> None:
         keys = batch_index.known_keys()
-        self.assertEqual(len(keys), 12)
+        self.assertEqual(len(keys), 15)
         self.assertEqual(set(keys), EXPECTED)
         self.assertEqual(len(set(keys)), len(keys))
 
     def test_articles_unique_by_mid_idx(self) -> None:
         pairs = {(article.mid, article.idx) for article in batch_index.ARTICLES}
-        self.assertEqual(len(pairs), 12)
+        self.assertEqual(len(pairs), 15)
+
+    def test_new_batch_2651075493_indexed(self) -> None:
+        articles = [
+            article for article in batch_index.ARTICLES
+            if article.mid == '2651075493'
+        ]
+        self.assertEqual(len(articles), 3)
+        self.assertEqual([article.idx for article in articles], [1, 2, 3])
+        self.assertEqual(
+            [article.mainline for article in articles],
+            ['产业与生态', '产业与生态', '前沿模型与架构'],
+        )
+        self.assertTrue(all(article.kind == '待核实' for article in articles))
+
+    def test_new_batch_keys_are_unique(self) -> None:
+        keys = [
+            batch_index.dedup_key(article.mid, article.idx)
+            for article in batch_index.ARTICLES
+            if article.mid == '2651075493'
+        ]
+        self.assertEqual(len(keys), len(set(keys)))
+
+    def test_known_keys_order_matches_batches_doc(self) -> None:
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        positions = [batches.index(key) for key in batch_index.known_keys()]
+        self.assertEqual(positions, sorted(positions))
 
     def test_new_articles_have_kind(self) -> None:
         new_articles = [
@@ -144,7 +173,7 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(second, 0)
         self.assertEqual(buffer1.getvalue(), buffer2.getvalue())
-        self.assertEqual(len(buffer1.getvalue().splitlines()), 12)
+        self.assertEqual(len(buffer1.getvalue().splitlines()), 15)
 
     def test_main_stdout_matches_known_keys(self) -> None:
         buffer = io.StringIO()
@@ -173,10 +202,10 @@ class BatchIndexTest(unittest.TestCase):
         for article in batch_index.ARTICLES:
             self.assertIn(article.title, readme)
 
-    def test_readme_topic_count_is_22(self) -> None:
+    def test_readme_topic_count_is_25(self) -> None:
         readme = (ROOT / 'README.md').read_text(encoding='utf-8')
         blocks = readme.split('### 选题 ')[1:]
-        self.assertEqual(len(blocks), 22)
+        self.assertEqual(len(blocks), 25)
 
     def test_batches_contains_all_dedup_keys(self) -> None:
         batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
