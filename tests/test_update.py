@@ -49,6 +49,53 @@ class UpdateScriptTest(unittest.TestCase):
         self.assertIn("退出码", roadmap)
         self.assertIn("## 阶段 1 完成标准", roadmap)
 
+    def test_archive_records_cover_three_new_articles(self) -> None:
+        result = run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = [line for line in result.stdout.splitlines() if line.startswith("[ARCHIVE]")]
+        self.assertEqual(len(records), 3)
+        keys = [record.split("key=", 1)[1].split(" ", 1)[0] for record in records]
+        self.assertEqual(
+            keys,
+            [
+                "machine_heart:2651075493:1",
+                "machine_heart:2651075493:2",
+                "machine_heart:2651075493:3",
+            ],
+        )
+
+    def test_archive_records_have_title_source_date(self) -> None:
+        result = run_script()
+        records = [line for line in result.stdout.splitlines() if line.startswith("[ARCHIVE]")]
+        for record in records:
+            self.assertIn("title=", record)
+            self.assertIn("source=machine_heart", record)
+            self.assertIn("date=2026-10-25", record)
+        joined = "\n".join(records)
+        self.assertIn("Sage S2.1 Flash", joined)
+        self.assertIn("DeepMind", joined)
+        self.assertIn("AI音乐", joined)
+
+    def test_archive_records_idempotent(self) -> None:
+        first = run_script()
+        second = run_script()
+        self.assertEqual(first.stdout, second.stdout)
+
+    def test_missing_archive_entries_keeps_base_record(self) -> None:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("update_module", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        original = module.ARCHIVE_ENTRIES
+        try:
+            module.ARCHIVE_ENTRIES = ()
+            self.assertEqual(module.build_archive_records(), [])
+            self.assertTrue(module.build_record().startswith("[UPDATE]"))
+        finally:
+            module.ARCHIVE_ENTRIES = original
+
 
 if __name__ == "__main__":
     unittest.main()
