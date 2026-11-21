@@ -139,6 +139,47 @@ class UpdateScriptTest(unittest.TestCase):
         finally:
             module.ARCHIVE_ENTRIES = original
 
+    def test_archive_entries_match_batch_index_new_batch(self) -> None:
+        """update.py 归档条目与 batch_index.py 中 mid=2651075493 的登记一致。"""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("update_module", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        archive_keys = [entry["key"] for entry in module.ARCHIVE_ENTRIES]
+        self.assertEqual(
+            archive_keys,
+            [
+                "machine_heart:2651075493:1",
+                "machine_heart:2651075493:2",
+                "machine_heart:2651075493:3",
+            ],
+        )
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import batch_index  # noqa: E402
+
+        indexed = [
+            batch_index.dedup_key(article.mid, article.idx)
+            for article in batch_index.ARTICLES
+            if article.mid == "2651075493"
+        ]
+        self.assertEqual(archive_keys, indexed)
+
+    def test_archive_entries_have_required_fields(self) -> None:
+        """归档条目字段固定为 key/title/source/date，且日期为整理日期。"""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("update_module", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        for entry in module.ARCHIVE_ENTRIES:
+            self.assertEqual(set(entry.keys()), {"key", "title", "source", "date"})
+            self.assertEqual(entry["source"], "machine_heart")
+            self.assertEqual(entry["date"], "2026-10-25")
+            self.assertTrue(entry["title"].strip())
+
 
 if __name__ == "__main__":
     unittest.main()

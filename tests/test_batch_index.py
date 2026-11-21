@@ -274,6 +274,32 @@ class BatchIndexTest(unittest.TestCase):
         self.assertEqual(len(hardcoded), len(batch_index.known_keys()))
         self.assertEqual(len(hardcoded), 15)
 
+    def test_batches_section_two_keys_equal_index_keys(self) -> None:
+        """第 2 节硬编码去重键集合与 batch_index.py 的 known_keys() 完全相等（数量与内容）。"""
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        section = batches.split('## 2. 去重键契约', 1)[1].split('## 3.', 1)[0]
+        hardcoded = [
+            line.strip().lstrip('- ').strip('`')
+            for line in section.splitlines()
+            if line.strip().startswith('- `machine_heart:')
+        ]
+        self.assertEqual(set(hardcoded), set(batch_index.known_keys()))
+        self.assertEqual(len(hardcoded), len(set(hardcoded)))
+
+    def test_batches_no_stale_twelve_count(self) -> None:
+        """BATCHES.md 中不应残留「12 个去重键」的旧计数表述。"""
+        batches = (ROOT / 'docs' / 'BATCHES.md').read_text(encoding='utf-8')
+        self.assertNotIn('共 12 个', batches)
+        self.assertNotIn('12 个键', batches)
+        self.assertNotIn('12 个去重键', batches)
+
+    def test_readme_topic_count_matches_batches_batch_count(self) -> None:
+        """README 选题数与 BATCHES 去重键数保持可核对关系（25 条选题 / 15 个键）。"""
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        blocks = readme.split('### 选题 ')[1:]
+        self.assertEqual(len(blocks), 25)
+        self.assertEqual(len(batch_index.known_keys()), 15)
+
 
     def test_validate_articles_rejects_non_string_fields(self) -> None:
         bad_entries = (
